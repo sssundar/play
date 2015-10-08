@@ -2,7 +2,7 @@
 ###### A sequential list of things I want to play with this term.
 
 ## Exercise LearningC
-###### Goal 1: Simple programming exercises in C to become familiar with the language.
+###### Goal 1: Simple programming exercises in C to become familiar with the language. Will use a 32-bit ArchLinux VM, which will also force me to use the git command line rather than the GUI. 
 ###### Goal 2: More involved exercises to become familiar with using C for embedded programming, as opposed to assembly. One of the exercises should be writing malloc (and testing it on an Arduino). These exercises should set the stage for playing with Arduinos in C.
 
 ## Exercise ArduinoMotionTracker
