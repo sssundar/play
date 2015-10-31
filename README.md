@@ -7,7 +7,7 @@
 
 ## Exercise Embedded C 
 #### Status: ongoing
-###### Low-level programming exercises in C following c.learncodethehardway.org & the Caltech CS24 homeworks last year. My eventual goal is to write malloc. 
+###### Low-level programming exercises in C following c.learncodethehardway.org & the Caltech CS24 homeworks from last year. My eventual goal is to write malloc. 
 
 ## Exercise ArduinoMotionTracker
 #### Status: on hold
