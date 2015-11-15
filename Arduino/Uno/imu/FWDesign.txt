@@ -1,0 +1,178 @@
+Goal: interface with a barometer & temperature sensor in assembly
+
+Last Revised by Sushant Sundaresh on 14 November 2015
+--------------------------------------------------------------------------------
+
+Components
+----------
+Arduino Uno r3 (5V outputs)
+	USB-B serial I/O and power cable
+
+Adafruit 10-DOF IMU Breakout 
+	Sensors		
+		BMP180
+			Barometer 
+				Uncalibrated output
+				Must interface with EEPROM on startup for calibration constants
+				0.25 m accuracy at 30 Hz sampling. ~0.6 mA draw at this rate.				
+			Thermometer 
+				0-65 C, 1 Hz sampling required for on-line barometer calibration
+		
+		L3GD20H (Gyro) 
+		LSM303 (Accelerometer, Compass)
+	
+	Supply Restrictions
+		None
+
+		5V I2C (internal logic level conversion)
+		5V Supply (internal 3.3 V LDO regulator)
+
+		from Uno headers
+			Vin (5V)
+			GND
+
+	I2C I/O
+		SCL_5V
+		SDA_5V
+
+	Ignored Outputs (for now)
+		GYR_INT 
+		GYR_RDY 
+		LSM_INT1
+		LSM_INT2
+		LSM_DRDY
+		All 3.3V -> compatible with Uno 5V as 'high'
+
+Datasheets, Schematics, & Docs
+------------------------------
+Arduino Uno r3 
+	https://www.arduino.cc/en/Main/ArduinoBoardUno#documentation
+Python Arduino Serial Interface
+	https://pyserial.readthedocs.org/en/latest/pyserial.html#installation
+Breakout
+	https://www.adafruit.com/products/1604 (includes schematic)
+Sensors
+	http://www.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf
+	http://www.adafruit.com/datasheets/LSM303DLHC.PDF
+	http://www.adafruit.com/datasheets/L3GD20H.pdf
+
+First Pass Approach
+-------------------
+Target: firmware in AVR assembly to do basic I2C communication and 
+serial transmission off the Arduino. Gain familiarity with debugging 
+and assembler toolchain. 
+
+Cannot touch hardware, or software, other than basic serial logging 
+via PySerial on /dev/ttyACM0, until this is done.
+
+Review the ATmega328P datasheet & Uno schematic to understand the following:
+	-memory map for peripherals
+	-starting address on push-button reset (and how to position IVT)
+	-I2C/SPI interface: setting speed, interrupts, flags registers??
+	-one way uno->usb serial interface: setting baud, interrupts, flags register
+	-timer interface (1 Hz sampling, 1 s interrupts)
+	-communications (i2c, serial) timing
+	-control registers setting interrupt priorities
+	-structures storing barometer calibration
+	-structures queuing barometer/temperature readings for burst transmission
+		with relative timestamp from start
+Debugging
+	Atmel Studio - does Arduino on-board ISP function as debugger interface?
+	Can we step through on the board, trap, unassemble? 
+
+Barometer Datasheet Notes
+-------------------------
+The barometer has a 176 bit EEPROM with 11 calibration coefficient words.
+From the datasheet, these are their 8-bit addresses.
+
+Address 	Word
+Parameter 	MSB 	LSB
+AC1 		0xAA 	0xAB
+AC2 		0xAC 	0xAD
+AC3 		0xAE 	0xAF
+AC4 		0xB0 	0xB1
+AC5 		0xB2 	0xB3
+AC6 		0xB4 	0xB5
+B1 			0xB6 	0xB7
+B2 			0xB8 	0xB9
+MB 			0xBA 	0xBB
+MC 			0xBC 	0xBD
+MD			0xBE 	0xBF
+
+Adafruit libraries use address 0x77 for this board. These are in
+7-bit notation. The actual address is 0xEE (0x77 << 1) for writing,
+and 0xEF for reading. 
+
+Needs 10 ms after start up before first communication.
+To be safe, on Uno reset (possibly not by power), try soft reset 
+(Addr 0xE0 = 0xB6) of chip, then read chip-id after 10 ms,
+(Addr 0xD0 = 0x55) to confirm I2C bus is working.
+
+For measurements, read Addr 0xF4 bit 5 (Sco) till this drops low (conv complete)
+On startup it should be this way already. Confirm this, then set 0xF4 (ctrl)
+to request the desired measurement. 
+
+Request Measurements
+--------------------
+Temperature 
+	Addr 0xF4 = 0x2E. 4.5 ms sampling time.
+Pressure
+	Addr 0xF4 = 0xF4 (oversampling bits = 3, so 25.5 ms delay, 8x sampling
+
+Measure temperature first, then pressure.
+Pressure measurements w/in 1 second can use the same temperature value
+for calibration.
+
+Wait recommended time after conversion requested.
+
+Read the word measurement (uncalibrated) = UT, UP 
+MSB = 0xF6, LSB = 0xF7
+
+Between telling the sensor the read address, and actually reading the address
+a reset condition on the I2C bus is required (downward edge on SCL with SDA 
+low).
+
+This protocol can be bit-bashed, meaning I can probably do this (slowly)
+by manually driving pins for the SCL and SDA lines. It's likely way faster
+to use a hardware solution, if it's available.
+
+Arduino ATMEGA328P Datasheet -- First Look Through
+--------------------------------------------------
+Port C (PC0..6) pins are related to the TWI (I2C compatible) interface.
+These include headers SDL,A = ADC5,4 = PC5,4
+
+Need to set flash-fuse for clock selection (16MHz external oscillator)
+Can this be done by the ISP (via avr_dude)?
+
+IVT Reset Vector - JMP instruction for 328P - confirm.
+Section 11 describes IVT - includes TWI interrupt (pg 66)
+
+I need to handle WDT - one way or another - always.
+	Don't want runaway code, don't want unexpected interrupts
+
+
+What is the boot section & why would I want to set BOOTRST and
+move the reset vector from its default location?
+
+Port pins (B,C,D...) can have many functions. Some override others.
+Look at I/O ports (alternate functions) more carefully.
+What registers do I actually need to set? I'm pretty sure I want to disable
+most PCINTs.
+
+Datasheet has clear TWI (I2C compatible) assembly-level usage description.
+MPU also has debug-by-wire unit. 
+
+--------------
+-- Decision --
+--------------
+There's a lot going on here. 
+I need to make a block diagram of what the code needs to do.
+I also need to 
+
+I'd say a good start would be getting a random port configured as an output, 
+and using it to blink an LED. 
+
+That'll familiarize me with the toolchain & debugger. 
+
+One big question is, are all these PCINTs enabled by default?
+I hope not. 
