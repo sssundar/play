@@ -167,12 +167,22 @@ MPU also has debug-by-wire unit.
 --------------
 There's a lot going on here. 
 I need to make a block diagram of what the code needs to do.
-I also need to 
 
 I'd say a good start would be getting a random port configured as an output, 
 and using it to blink an LED. 
 
-That'll familiarize me with the toolchain & debugger. 
+------------------------
+Blinking LED in Assembly
+------------------------
 
-One big question is, are all these PCINTs enabled by default?
-I hope not. 
+Let's make a simple program that toggles an LED at 1 Hz.
+Let's put the LED on Digital Pin 8 (which, for my 328p-Uno, is MCU pin PB0).
+
+Timers are 16 bits. Prescaling by 8000/65 ~ 256 and interrupting at overflow 
+would be appropriate for a 1 Hz update given that we're running at 16 MHz. 
+
+We'll be using Timer 1, the only 16 bit timer.
+We'll be programming with BOOTRST = 1, IVSEL = 0
+so our IVT starts at 0x0000.
+
+See blinkLED.asm
