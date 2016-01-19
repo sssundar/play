@@ -1,8 +1,8 @@
 # free play
 
-## Arduinos, Electronics, Assembly, and C
+## Arduinos, Electronics
 #### Status: ongoing
-###### Low-level programming exercises in C following c.learncodethehardway.org. Writing malloc following the Caltech CS24 homeworks from 2014. Interfacing with IMUs and such using Arduinos and assembly to learn about modern sensing elements, and associated circuitry. 
+###### Interfacing with IMUs and such using Arduinos and assembly to learn about modern sensing elements, and associated circuitry. 
 
 ## Visualizing Probability
 #### Status: on hold
