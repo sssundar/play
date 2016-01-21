@@ -1,6 +1,64 @@
 Goal: interface with a barometer & temperature sensor in assembly
+Last Revised by Sushant Sundaresh on 21 January 2016
+--------------------------------------------------------------------------------
 
-Last Revised by Sushant Sundaresh on 14 November 2015
+------------------------
+Blinking LED in Assembly
+------------------------
+
+Let's first make a simple program that toggles an LED at 1 Hz.
+Let's put the LED on Digital Pin 8 (which, for my 328p-Uno, is MCU pin PB0).
+
+Timers are 16 bits. Prescaling by 8000/65 ~ 256 and interrupting at overflow 
+would be appropriate for a 1 Hz update given that we're running at 16 MHz. 
+
+We'll be using Timer 1, the only 16 bit timer.
+We'll be programming with BOOTRST = 1, IVSEL = 0
+so our IVT starts at 0x0000.
+
+Done - try make blink, load_blink
+
+--------------------------------
+Send a character to the COM port
+--------------------------------
+
+Let's get the character 'A' to repeat at 1 Hz on the COM port using 9600 baud.
+
+Done - try make speak, load_speak
+	
+----------------------
+Set up Watch Dog Timer
+----------------------
+
+Interrupt Vector 0x000C, I believe.
+
+-------------------------------------------
+Set up I2C/TWI and interface with barometer 
+-------------------------------------------
+
+---------------------------------------------
+Set up I2C/TWI and interface with thermometer
+---------------------------------------------
+
+-----------------------------------------------
+Set up I2C/TWI and interface with accelerometer
+-----------------------------------------------
+
+--------------------------------------
+Set up I2C/TWI and interface with gyro
+--------------------------------------
+
+------------------------------------------------------------------------------
+Play with sensor fusion till you can figure out you're stationary or in motion
+------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+Look into power circuitry/motors
+	goal: build a crude quadcopter that can remain stable (rotational, height)
+-------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+================================================================================
 --------------------------------------------------------------------------------
 
 Components
@@ -43,6 +101,10 @@ Adafruit 10-DOF IMU Breakout
 		LSM_DRDY
 		All 3.3V -> compatible with Uno 5V as 'high'
 
+--------------------------------------------------------------------------------
+================================================================================
+--------------------------------------------------------------------------------
+
 Datasheets, Schematics, & Docs
 ------------------------------
 Arduino Uno r3 
@@ -55,6 +117,10 @@ Sensors
 	http://www.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf
 	http://www.adafruit.com/datasheets/LSM303DLHC.PDF
 	http://www.adafruit.com/datasheets/L3GD20H.pdf
+
+--------------------------------------------------------------------------------
+================================================================================
+--------------------------------------------------------------------------------
 
 First Pass Approach
 -------------------
@@ -79,6 +145,10 @@ Review the ATmega328P datasheet & Uno schematic to understand the following:
 Debugging
 	Atmel Studio - does Arduino on-board ISP function as debugger interface?
 	Can we step through on the board, trap, unassemble? 
+
+--------------------------------------------------------------------------------
+================================================================================
+--------------------------------------------------------------------------------
 
 Barometer Datasheet Notes
 -------------------------
@@ -136,10 +206,14 @@ This protocol can be bit-bashed, meaning I can probably do this (slowly)
 by manually driving pins for the SCL and SDA lines. It's likely way faster
 to use a hardware solution, if it's available.
 
-Arduino ATMEGA328P Datasheet -- First Look Through
+--------------------------------------------------------------------------------
+================================================================================
+--------------------------------------------------------------------------------
+
+Arduino ATMEGA328P Datasheet -- Notes
 --------------------------------------------------
 Port C (PC0..6) pins are related to the TWI (I2C compatible) interface.
-These include headers SDL,A = ADC5,4 = PC5,4
+These include headers SCL,SDA = ADC5,4 = PC5,4
 
 Need to set flash-fuse for clock selection (16MHz external oscillator)
 Can this be done by the ISP (via avr_dude)?
@@ -150,39 +224,6 @@ Section 11 describes IVT - includes TWI interrupt (pg 66)
 I need to handle WDT - one way or another - always.
 	Don't want runaway code, don't want unexpected interrupts
 
-
-What is the boot section & why would I want to set BOOTRST and
-move the reset vector from its default location?
-
-Port pins (B,C,D...) can have many functions. Some override others.
-Look at I/O ports (alternate functions) more carefully.
-What registers do I actually need to set? I'm pretty sure I want to disable
-most PCINTs.
-
 Datasheet has clear TWI (I2C compatible) assembly-level usage description.
 MPU also has debug-by-wire unit. 
 
---------------
--- Decision --
---------------
-There's a lot going on here. 
-I need to make a block diagram of what the code needs to do.
-
-I'd say a good start would be getting a random port configured as an output, 
-and using it to blink an LED. 
-
-------------------------
-Blinking LED in Assembly
-------------------------
-
-Let's make a simple program that toggles an LED at 1 Hz.
-Let's put the LED on Digital Pin 8 (which, for my 328p-Uno, is MCU pin PB0).
-
-Timers are 16 bits. Prescaling by 8000/65 ~ 256 and interrupting at overflow 
-would be appropriate for a 1 Hz update given that we're running at 16 MHz. 
-
-We'll be using Timer 1, the only 16 bit timer.
-We'll be programming with BOOTRST = 1, IVSEL = 0
-so our IVT starts at 0x0000.
-
-See blinkLED.asm

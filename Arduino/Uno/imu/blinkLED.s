@@ -4,10 +4,9 @@
 ;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;
-; AVRA Command Line Arguments
-; avra blinkLED.s
-; AVRDUDE Command Line Arguments
-; avrdude -c arduino -p m328p -P /dev/ttyACM0 -U flash:w:blinkLED.s.hex 
+; Build Instructions 
+; make blink
+; make load_blink
 ;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;
