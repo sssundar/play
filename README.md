@@ -2,7 +2,7 @@
 
 ## Arduinos, Electronics
 #### Status: ongoing
-###### Interfacing with IMUs and such using Arduinos and assembly to learn about modern sensing elements, and associated circuitry. 
+###### Interfacing with an IMU using an Arduino, assembly, and C to learn about sensor fusion for moving systems.
 
 ## Visualizing Probability
 #### Status: on hold
