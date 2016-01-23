@@ -4,7 +4,7 @@
   *
   * @author Sushant Sundaresh
   * @lastrevised 22 January 2016
-  * @build make altitude, make load_altitude
+  * @build make all (with Uno connected)
   * 
   * @note avr-libc v1:1.8.0-4.1 source <avr/iom328p.h> from <avr/io.h> included
   */
