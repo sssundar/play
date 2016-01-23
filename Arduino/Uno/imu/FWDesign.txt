@@ -1,5 +1,5 @@
 Goal: interface with a barometer & temperature sensor in assembly
-Last Revised by Sushant Sundaresh on 21 January 2016
+Last Revised by Sushant Sundaresh on 22 January 2016
 --------------------------------------------------------------------------------
 
 ------------------------
@@ -26,19 +26,58 @@ Let's get the character 'A' to repeat at 1 Hz on the COM port using 9600 baud.
 
 Done - try make speak, load_speak
 	
+--------------------------------------------------------------------------------
+-Port old code to C and learn to use gcc-avr
+	http://www.tldp.org/HOWTO/Avr-Microcontrollers-in-Linux-Howto/x207.html
+	http://www.atmel.com/webdoc/AVRLibcReferenceManual/porting_1iar_porting_register.html
+-Set up I2C/TWI and interface with barometer/thermometer
+-Write Python script to conver these to altitude estimates & update a display
+--------------------------------------------------------------------------------
+
+Barometer Data
+	Ultra high resolution, 8x oversampling, 0.25m resolution
+	Can get 40 Hz, let's aim for 25 Hz. 
+	3 bytes/sample
+Temperature Data
+	Needed for calibration
+	1 Hz needed, 200 Hz possible
+	2 bytes/sample
+
+-Let's make one 100 Hz timer and divide it down ourselves to 25 Hz, 1 Hz.
+-That's 16 MHz/160000 so we'll definitely need to use the 16 bit timer0.
+
+-Let's use timer interrupts to start sampling.
+-We can use 100 Hz interrupts to get data (sensors aren't interrupt driven)
+	- 10 ms, and temperature has 5 ms conversion time, and barometer has 25 ms.
+	- So wait 4 100 Hz interrupts for barometer, 2 for temperature, to be safe.
+	- For now we'll timestamp implicitly in Python using base frequencies	
+
+- We'll read timer count (2 bytes) and append to each measurement.
+
+We need mostly queues & structs, and I want to start using C for this anyways.
+Let's do this in C.
+
+#define DATA_TYPE_BAROM 0xF0
+#define DATA_TYPE_THERM 0xE0
+
+struct barometer_sample {
+	char data_type;
+	char barom_MSB;
+	char barom_LSB;
+	char barom_XLSB;
+} barometer_sample;
+
+struct temperature_sample {
+	char data_type;
+	char therm_MSB;
+	char therm_LSB;
+} temperature_sample;
+
 ----------------------
 Set up Watch Dog Timer
 ----------------------
 
 Interrupt Vector 0x000C, I believe.
-
--------------------------------------------
-Set up I2C/TWI and interface with barometer 
--------------------------------------------
-
----------------------------------------------
-Set up I2C/TWI and interface with thermometer
----------------------------------------------
 
 -----------------------------------------------
 Set up I2C/TWI and interface with accelerometer
