@@ -1,0 +1,83 @@
+@design Barometer/Temperature Sensor Interfacing FSMs & Interrupt Handling
+@author Sushant Sundaresh
+@lastrevised 23 January 2016
+
+-- Goal --
+I want 25 Hz barometry and 1 Hz thermometry; neither sensor is interrupt
+based therefore I must poll their status (using timer interrupts judiciously).
+
+We have timer, uart, and twi interrupts. Suppose a 100 Hz timer1 interrupt 
+(10 ms) & 151.2kbps UART. 
+
+-- Approach --
+
+The temperature sensing is not super time critical. So barometry takes
+priority, always. That said, when we need both, we can ask the thermometer
+to sample first (4.5 ms sample time), then the barometer (25 ms sample time), 
+then 10 ms later ask the thermometer for data, then 20 ms later ask the
+barometer for data. 
+
+
+Let's have flags for 
+	THERMOMETER_SAMPLING_IN_PROGRESS 	only reset by interrupts
+	BAROMETER_SAMPLING_IN_PROGRESS 		only reset by interrupts
+	TIME_FOR_THERMOMETER_SAMPLE 		on 1 Hz ticks, only set by interrupts
+	TIME_FOR_BAROMETER_SAMPLE	 		on 25 Hz ticks, only set by interrupts
+
+Then control flow in the main loop could look like:
+	Disable Interrupts
+	Set up UART, TIM1 (CMP), TWI peripherals 
+	Clear all flags
+	Enable Interrupts
+
+	while (1) {		
+		if (TWI module is idle) {
+			disable interrupts
+			if (it's time for temperature but not barometry) {
+				
+				set a local flag 	// should never happen
+
+			} else if (it's time for temperature and barometry) {
+				set a local flag
+			} else if (it's time for barometry and not temperature) {
+				set a local flag
+			} else {
+				set a local flag
+			}
+			enable interrupts
+			start twi FSM in appropriate acquisition state
+				let it build up and enqueue up to two samples (T,B)
+		} else {
+			sleep() till someone interrupts me
+		}
+		
+	}
+
+Let the UART run through the data queue as fast as it can; 
+on my laptop I'll run a Python script that assumes no interrupt losses and
+timestamps the data based on the intended acquisiton rates.
+
+We can let UART have a flag that says "I ran out of stuff to send," that the
+main loop checks, and it can then safely dequeue (no other dequeuers
+in handlers) and poke UART again.
+
+Let's avoid malloc - we know how much memory we need.
+
+Given the ~10^5-10^5 fold delta between sampling & all processing,
+processing, I'd say we're safe for not missing interrupts. We can test this 
+by having interrupts drive pins high/low on entry/exit and using a logic 
+analyzer.
+
+If this works, and I don't seem to be missing timer interrupts,
+the next step is to add a timestamp from the Arduino itself, e.g.
+using a parallel running timer (8 bits) that interrupts on overflow (~256) 
+clocks, and just counts an 8 bit counter. Giving that priority 
+in the IRQ handler wouldn't mess with our own handlers too much,
+since they have such slow sampling requirements, but it'd give us 
+a good idea of sample jitter.
+
+
+
+
+
+
