@@ -1,15 +1,93 @@
-@design Barometer/Temperature Sensor Interfacing FSMs & Interrupt Handling
+@design Barometer/Temperature Sensor Sampling
 @author Sushant Sundaresh
-@lastrevised 23 January 2016
+@revised 18 April 2016
 
 -- Goal --
-I want 25 Hz barometry and 1 Hz thermometry; neither sensor is interrupt
-based therefore I must poll their status (using timer interrupts judiciously).
+I want 25 Hz barometry and 1 Hz thermometry with a global clock capable of 
+giving me at least a few minutes continuous sampling without wrapping.
 
-We have timer, uart, and twi interrupts. Suppose a 100 Hz timer1 interrupt 
-(10 ms) & 151.2kbps UART. 
+Neither sensor is interrupt based therefore I must poll their status using
+timer interrupts.
+
+-- Definition of Success --
+A functional breakdown of the problem, with a clear modularization and 
+interface specification for modules. A block diagram of the system. 
+
+-- Time Allotted -- 
+18-April-2016, 1 hour, 7:30-8:30 PM.
 
 -- Approach --
+
+I want this design to be somewhat extensible. Eventually I intend to sample
+a 9-axis IMU, the altimeter, and the thermometer, with timestamps.
+
+So I can't really afford to do this single-threaded when none of these sensors
+are interrupt based - I'd be wasting the chance to get multiple peripherals
+sampling at once.
+
+Since the Uno is single core, and since it doesn't have the logic to thread
+unless I code it in, I say for starters we do this with an event queue.
+
+So, the modules in the system will be:
+
+Transmission Queue Interface
+Event Queue Interface
+UART Interface
+TWI Interface
+BMP180 Interface
+Timing Interface
+
+All modules will have initialization functions.
+
+The main loop will set up IVTs that call module response functions.
+It will then initialize each module and wait for the user to send a UART start 
+signal from their laptop (to say the PySerial sniffer is up and running).
+
+Then the main loop will simply process its event queue, and sleep when it has
+nothing to do, waking on timer interrupts to see if anything new has shown up.
+
+It will be a fatal error if the event queue ever fills up. 
+
+Let's flesh out the interfaces.
+
+Transmission Queue Interface (Critical Code)
+	Init
+	can_enqueue
+	can_dequeue
+	enqueue
+	dequeue
+Event Queue Interface (Critical Code)
+	Events will have actions (function pointers) and arguments (up to 3)
+	Init
+	can_enqueue
+	can_dequeue
+	enqueue
+	dequeue
+UART Interface 
+	init
+	send sample
+	receive start signal
+TWI Interface
+	init
+	read(busaddr,register,&data)
+	write(busaddr,register,data)
+BMP180 Interface
+	Init
+	TemperatureSampleHolder
+	PressureSampleHolder
+	Get Calibration Data
+	Get Uncompensated Temperature Sample	
+	Get Uncompensated Pressure Sample	
+	/* To Do - Compensate On-line */
+Timing Interface
+	Init
+	Increment Ticks
+	Get Tick
+	Sleep Until Tick
+
+-- Timing Considerations --
+We're almost certainly in no danger of missing samples due to UART processing.
+There's a massive timescale difference between UART bps and incoming sample bps.
 
 The temperature sensing is not super time critical. So barometry takes
 priority, always. That said, when we need both, we can ask the thermometer
@@ -17,64 +95,6 @@ to sample first (4.5 ms sample time), then the barometer (25 ms sample time),
 then 10 ms later ask the thermometer for data, then 20 ms later ask the
 barometer for data. 
 
-
-Let's have flags for 
-	THERMOMETER_SAMPLING_IN_PROGRESS 	only reset by interrupts
-	BAROMETER_SAMPLING_IN_PROGRESS 		only reset by interrupts
-	TIME_FOR_THERMOMETER_SAMPLE 		on 1 Hz ticks, only set by interrupts
-	TIME_FOR_BAROMETER_SAMPLE	 		on 25 Hz ticks, only set by interrupts
-
-Then control flow in the main loop could look like:
-	Disable Interrupts
-	Set up UART, TIM1 (CMP), TWI peripherals 
-	Clear all flags
-	Enable Interrupts
-
-	while (1) {		
-		if (TWI module is idle) {
-			disable interrupts
-			if (it's time for temperature but not barometry) {
-				
-				set a local flag 	// should never happen
-
-			} else if (it's time for temperature and barometry) {
-				set a local flag
-			} else if (it's time for barometry and not temperature) {
-				set a local flag
-			} else {
-				set a local flag
-			}
-			enable interrupts
-			start twi FSM in appropriate acquisition state
-				let it build up and enqueue up to two samples (T,B)
-		} else {
-			sleep() till someone interrupts me
-		}
-		
-	}
-
-Let the UART run through the data queue as fast as it can; 
-on my laptop I'll run a Python script that assumes no interrupt losses and
-timestamps the data based on the intended acquisiton rates.
-
-We can let UART have a flag that says "I ran out of stuff to send," that the
-main loop checks, and it can then safely dequeue (no other dequeuers
-in handlers) and poke UART again.
-
-Let's avoid malloc - we know how much memory we need.
-
-Given the ~10^5-10^5 fold delta between sampling & all processing,
-processing, I'd say we're safe for not missing interrupts. We can test this 
-by having interrupts drive pins high/low on entry/exit and using a logic 
-analyzer.
-
-If this works, and I don't seem to be missing timer interrupts,
-the next step is to add a timestamp from the Arduino itself, e.g.
-using a parallel running timer (8 bits) that interrupts on overflow (~256) 
-clocks, and just counts an 8 bit counter. Giving that priority 
-in the IRQ handler wouldn't mess with our own handlers too much,
-since they have such slow sampling requirements, but it'd give us 
-a good idea of sample jitter.
 
 
 

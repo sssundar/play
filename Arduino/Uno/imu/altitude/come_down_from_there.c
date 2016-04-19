@@ -11,7 +11,18 @@
 
 #include <avr/io.h> 
 #include <avr/interrupt.h>
+
+#include "bool.h"
+
 #include "come_down_from_there.h"
+
+#include "timer.h"
+#include "uart.h"
+#include "i2c.h"
+#include "clock.h"
+#include "queue.h"
+
+
 
 /* Global Variables */
 char CHAR_2_TRANSMIT = 'A';
