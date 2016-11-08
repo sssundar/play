@@ -1,6 +1,6 @@
 @design Barometer/Temperature Sensor Sampling
 @author Sushant Sundaresh
-@revised 18 April 2016
+@revised 8 November 2016
 
 -- Goal --
 I want 25 Hz barometry and 1 Hz thermometry with a global clock capable of 
@@ -12,9 +12,6 @@ timer interrupts.
 -- Definition of Success --
 A functional breakdown of the problem, with a clear modularization and 
 interface specification for modules. A block diagram of the system. 
-
--- Time Allotted -- 
-18-April-2016, 1 hour, 7:30-8:30 PM.
 
 -- Approach --
 

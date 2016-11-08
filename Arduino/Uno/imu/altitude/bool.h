@@ -2,8 +2,10 @@
 #define BOOL_HDR
 
 /* Boolean Constants */
+typedef enum {
+	kfalse = 0,
+	ktrue = 1
+} BOOL;
 
-#define IS_TRUE 0x01
-#define IS_FALSE 0x00
-
-#endif /* bool.h */
+#endif 
+// BOOL_HDR

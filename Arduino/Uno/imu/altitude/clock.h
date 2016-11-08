@@ -1,16 +1,15 @@
 #ifndef CLK_HDR
 #define CLK_HDR
 
-#define GLOBAL_CLOCK_BYTE_WIDTH 3
+#define CLOCK_BYTE_WIDTH 3
 
 struct ticks {	
-	uint8_t count[GLOBAL_CLOCK_BYTE_WIDTH]; /* Max index is LSB */
-}
+	uint8_t count[CLOCK_BYTE_WIDTH]; /* Max index is LSB */
+};
 
-struct ticks global_clock;
+void clock_init (void);
+void clock_increment (void);
+void clock_get_ticks (struct ticks *dst); /* Do not call in an interrupt context */
 
-void init_global_clock (void);
-void increment_global_ticks (void);
-void get_global_ticks (struct ticks *dst);
-
-#endif /* clock.h */
+#endif 
+// CLK_HDR
