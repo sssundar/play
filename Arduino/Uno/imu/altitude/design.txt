@@ -46,44 +46,48 @@ void die (void) {
 Object Methods --
 -----------------
 timer_driver   
-    eStatus timer_init(timer_driver *self);                                     <-- PROTECTS ITSELF. Do not call from interrupt context. Sets up a 100 Hz timer
-    void timer_deinit(timer_driver *self);                                      <-- PROTECTS ITSELF. Do not call from interrupt context. Disables the timer
-    eStatus timer_register(timer_driver *self, event_queue *e, uint8_t ticks);  <-- PROTECTS ITSELF. Do not call from interrupt context. Registers queue to be notified every ticks ticks
+    eStatus timer_init(timer_driver *self);                                     <-- PROTECTS ITSELF and restores interrupt flags. Sets up a 100 Hz timer
+    void timer_deinit(timer_driver *self);                                      <-- PROTECTS ITSELF and restores interrupt flags. Disables the timer
+    eStatus timer_register(timer_driver *self, event_queue *e, uint8_t ticks);  <-- PROTECTS ITSELF and restores interrupt flags. Registers queue to be notified every ticks ticks
     static void timer_tick(timer_driver *self);                                 <-- Called in the timer ISR routine. Moves system time forward one tick
     static void timer_notify(timer_driver *self, uint8_t ticks);                <-- Called by timer_tick. Messages event queues that ticks ticks have elapsed if they registered for the notification.
 
 twi_driver
-    eStatus twi_init(twi_driver *self);                                         <-- 
-    void twi_deinit(twi_driver *self);                                          <--
-    eStatus twi_get(twi_driver *self, uint8_t addr, uint8_t reg, uint8_t dest); <--
-    eStatus twi_put(twi_driver *self, uint8_t addr, uint8_t reg, uint8_t src);  <--
+    eStatus twi_init(twi_driver *self);                                         <-- PROTECTS ITSELF and restores interrupt flags. 
+    void twi_deinit(twi_driver *self);                                          <-- PROTECTS ITSELF and restores interrupt flags. 
+    eStatus twi_get(twi_driver *self, uint8_t addr, uint8_t reg, uint8_t dest); <-- Not critical. Will not return until the TWI command is complete.
+    eStatus twi_put(twi_driver *self, uint8_t addr, uint8_t reg, uint8_t src);  <-- Not critical. Will not return until the TWI command is complete.
 
 uart_driver
-    eStatus uart_init(uart_driver *self);                                       <--
-    void uart_deinit(uart_driver *self);                                        <--
-    eStatus uart_register(uart_driver *self, sampler *client);                  <--
-    eUARTMessage uart_receive(uart_driver *self);                               <--
-    eStatus uart_transmit(uart_driver *self, data *src);                        <--
+    eStatus uart_init(uart_driver *self);                                       <-- PROTECTS ITSELF. and restores interrupt flags 
+    void uart_deinit(uart_driver *self);                                        <-- PROTECTS ITSELF and restores interrupt flags. 
+    eStatus uart_register(uart_driver *self, sampler *client);                  <-- PROTECTS ITSELF and restores interrupt flags. 
+    eUARTMessage uart_receive(uart_driver *self);                               <-- PROTECTS ITSELF and restores interrupt flags. 
+    eStatus uart_transmit(uart_driver *self, data *src);                        <-- Not critical. Will not return until the entire data structure has been sent out successfully.
+    static void uart_notify(uart_driver *self, eUARTMessage m);                 <-- Called in the UART IAR routine on RX events.
 
 event_queue
-    eStatus event_queue_init(event_queue *self);                                <--
-    void event_queue_deinit(event_queue *self);                                 <--
-    eStatus event_queue_enqueue(event_queue *self, e *src);                     <--
-    eStatus event_queue_dequeue(event_queue *self, event *dest);                <--
+    eStatus event_queue_init(event_queue *self);                                <-- PROTECTS ITSELF and restores interrupt flags. 
+    void event_queue_deinit(event_queue *self);                                 <-- PROTECTS ITSELF and restores interrupt flags. 
+    eStatus event_queue_enqueue(event_queue *self, e *src);                     <-- Called by ISRs only.
+    eStatus event_queue_dequeue(event_queue *self, event *dest);                <-- PROTECTS ITSELF and restores interrupt flags. 
 
 sample_queue
-    eStatus sample_queue_init(sample_queue *self);                              <--
-    void sample_queue_deinit(sample_queue *self);                               <--
-    eStatus sample_queue_enqueue(sample_queue *self, data *src);                <--
-    eStatus sample_queue_dequeue(sample_queue *self, data *dest);               <--
+    eStatus sample_queue_init(sample_queue *self);                              <-- PROTECTS ITSELF and restores interrupt flags.  
+    void sample_queue_deinit(sample_queue *self);                               <-- PROTECTS ITSELF and restores interrupt flags. 
+    eStatus sample_queue_enqueue(sample_queue *self, data *src);                <-- Not critical.
+    eStatus sample_queue_dequeue(sample_queue *self, data *dest);               <-- Not critical.
 
 sampler
-    eStatus sampler_init(sampler *self, event_queue *e, sample_queue *s);       <--
-    void sampler_deinit(sampler *self);                                         <--
-    eStatus sampler_run(sampler *self);                                         <-- Runs sampler loop. Should never return.
+    eStatus sampler_init(sampler *self, event_queue *e, sample_queue *s);       <-- Not critical.
+    void sampler_deinit(sampler *self);                                         <-- Not critical.
+    eStatus sampler_run(sampler *self);                                         <-- Not critical. Runs sampler loop. Should never return.
 
 
 To Do --
 --------
-1. Test the entire setup with stubs
-2. Introduce a logger in non-volatile memory and PySerial commands to dump logs
+# Implement and test incrementally. Commit often.
+# Test on-device, sampling at 100Hz, 25Hz, and 1Hz, and talking to the Barometer/Thermometer. Just raw-dump data on the laptop side.
+# Introduce post-processing on the laptop side
+# Try for a real-time plotting library
+# Introduce a logger in non-volatile memory and PySerial commands to dump logs
