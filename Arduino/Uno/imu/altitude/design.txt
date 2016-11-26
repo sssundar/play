@@ -1,100 +1,89 @@
-@design Barometer/Temperature Sensor Sampling
+@file design.txt
+@details    Arduino Uno interface to Adafruit #1604 IMU. 
+            Barometer/Temperature Sensor Sampling Design
 @author Sushant Sundaresh
-@revised 8 November 2016
+@date 25 November 2016
 
--- Goal --
-I want 25 Hz barometry and 1 Hz thermometry with a global clock capable of 
-giving me at least a few minutes continuous sampling without wrapping.
-
-Neither sensor is interrupt based therefore I must poll their status using
-timer interrupts.
-
--- Definition of Success --
-A functional breakdown of the problem, with a clear modularization and 
-interface specification for modules. A block diagram of the system. 
-
--- Approach --
-
-I want this design to be somewhat extensible. Eventually I intend to sample
-a 9-axis IMU, the altimeter, and the thermometer, with timestamps.
-
-So I can't really afford to do this single-threaded when none of these sensors
-are interrupt based - I'd be wasting the chance to get multiple peripherals
-sampling at once.
-
-Since the Uno is single core, and since it doesn't have the logic to thread
-unless I code it in, I say for starters we do this with an event queue.
-
-So, the modules in the system will be:
-
-Transmission Queue Interface
-Event Queue Interface
-UART Interface
-TWI Interface
-BMP180 Interface
-Timing Interface
-
-All modules will have initialization functions.
-
-The main loop will set up IVTs that call module response functions.
-It will then initialize each module and wait for the user to send a UART start 
-signal from their laptop (to say the PySerial sniffer is up and running).
-
-Then the main loop will simply process its event queue, and sleep when it has
-nothing to do, waking on timer interrupts to see if anything new has shown up.
-
-It will be a fatal error if the event queue ever fills up. 
-
-Let's flesh out the interfaces.
-
-Transmission Queue Interface (Critical Code)
-	Init
-	can_enqueue
-	can_dequeue
-	enqueue
-	dequeue
-Event Queue Interface (Critical Code)
-	Events will have actions (function pointers) and arguments (up to 3)
-	Init
-	can_enqueue
-	can_dequeue
-	enqueue
-	dequeue
-UART Interface 
-	init
-	send sample
-	receive start signal
-TWI Interface
-	init
-	read(busaddr,register,&data)
-	write(busaddr,register,data)
-BMP180 Interface
-	Init
-	TemperatureSampleHolder
-	PressureSampleHolder
-	Get Calibration Data
-	Get Uncompensated Temperature Sample	
-	Get Uncompensated Pressure Sample	
-	/* To Do - Compensate On-line */
-Timing Interface
-	Init
-	Increment Ticks
-	Get Tick
-	Sleep Until Tick
-
--- Timing Considerations --
-We're almost certainly in no danger of missing samples due to UART processing.
-There's a massive timescale difference between UART bps and incoming sample bps.
-
-The temperature sensing is not super time critical. So barometry takes
-priority, always. That said, when we need both, we can ask the thermometer
-to sample first (4.5 ms sample time), then the barometer (25 ms sample time), 
-then 10 ms later ask the thermometer for data, then 20 ms later ask the
-barometer for data. 
+Objects --
+----------
+timer_driver
+twi_driver
+uart_driver
+sampler
+timer_event_queue
+sample_queue
 
 
+Uno Main Flow --
+----------------
+A sample queue object is initialized
+An event queue object is initialized
+An sampler object is initialized with its sample and event queues
+A TWI driver object is initialized
+A timer driver object is initialized
+A UART uart driver object is initialized
+The sampler object's run method is called.
+die();
+
+PySerial Main Flow --
+---------------------
+Send a start signal 
+Log data for 10 seconds
+Send an end signal
+Save the data to file with a user-specified filename
+Plot the data
+
+Observing Errors --
+-------------------
+void die (void) { 
+    disable interrupts
+    deinitialize everything
+    while (1) {
+        flash a light at 1 Hz;
+    }
+}
+
+Object Methods --
+-----------------
+timer_driver   
+    eStatus timer_init(timer_driver *self);                                     <-- PROTECTS ITSELF. Do not call from interrupt context. Sets up a 100 Hz timer
+    void timer_deinit(timer_driver *self);                                      <-- PROTECTS ITSELF. Do not call from interrupt context. Disables the timer
+    eStatus timer_register(timer_driver *self, event_queue *e, uint8_t ticks);  <-- PROTECTS ITSELF. Do not call from interrupt context. Registers queue to be notified every ticks ticks
+    static void timer_tick(timer_driver *self);                                 <-- Called in the timer ISR routine. Moves system time forward one tick
+    static void timer_notify(timer_driver *self, uint8_t ticks);                <-- Called by timer_tick. Messages event queues that ticks ticks have elapsed if they registered for the notification.
+
+twi_driver
+    eStatus twi_init(twi_driver *self);                                         <-- 
+    void twi_deinit(twi_driver *self);                                          <--
+    eStatus twi_get(twi_driver *self, uint8_t addr, uint8_t reg, uint8_t dest); <--
+    eStatus twi_put(twi_driver *self, uint8_t addr, uint8_t reg, uint8_t src);  <--
+
+uart_driver
+    eStatus uart_init(uart_driver *self);                                       <--
+    void uart_deinit(uart_driver *self);                                        <--
+    eStatus uart_register(uart_driver *self, sampler *client);                  <--
+    eUARTMessage uart_receive(uart_driver *self);                               <--
+    eStatus uart_transmit(uart_driver *self, data *src);                        <--
+
+event_queue
+    eStatus event_queue_init(event_queue *self);                                <--
+    void event_queue_deinit(event_queue *self);                                 <--
+    eStatus event_queue_enqueue(event_queue *self, e *src);                     <--
+    eStatus event_queue_dequeue(event_queue *self, event *dest);                <--
+
+sample_queue
+    eStatus sample_queue_init(sample_queue *self);                              <--
+    void sample_queue_deinit(sample_queue *self);                               <--
+    eStatus sample_queue_enqueue(sample_queue *self, data *src);                <--
+    eStatus sample_queue_dequeue(sample_queue *self, data *dest);               <--
+
+sampler
+    eStatus sampler_init(sampler *self, event_queue *e, sample_queue *s);       <--
+    void sampler_deinit(sampler *self);                                         <--
+    eStatus sampler_run(sampler *self);                                         <-- Runs sampler loop. Should never return.
 
 
-
-
-
+To Do --
+--------
+1. Test the entire setup with stubs
+2. Introduce a logger in non-volatile memory and PySerial commands to dump logs
