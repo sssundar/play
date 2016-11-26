@@ -1,11 +1,14 @@
-/**  
-  * @contents Extended clock
+/**
+  * @file timer_driver.c
   * @author Sushant Sundaresh
-  * @lastrevised 22 March 2016
-  */
+  * @date 2016-11-26
+  * @details
+  * A partial hardware driver for the Atmega 328p timers. 
+  */ 
 
-#include "clock.h"
+#include <avr/io.h> 
 #include <avr/interrupt.h>
+#include "timer_driver.h"
 
 /* Global timer tick counter */
 struct ticks global_clock;

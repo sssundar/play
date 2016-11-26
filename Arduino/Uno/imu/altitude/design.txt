@@ -46,42 +46,42 @@ void die (void) {
 Object Methods --
 -----------------
 timer_driver   
-    eStatus timer_init(timer_driver *self);                                     <-- PROTECTS ITSELF and restores interrupt flags. Sets up a 100 Hz timer
-    void timer_deinit(timer_driver *self);                                      <-- PROTECTS ITSELF and restores interrupt flags. Disables the timer
-    eStatus timer_register(timer_driver *self, event_queue *e, uint8_t ticks);  <-- PROTECTS ITSELF and restores interrupt flags. Registers queue to be notified every ticks ticks
-    static void timer_tick(timer_driver *self);                                 <-- Called in the timer ISR routine. Moves system time forward one tick
-    static void timer_notify(timer_driver *self, uint8_t ticks);                <-- Called by timer_tick. Messages event queues that ticks ticks have elapsed if they registered for the notification.
+    eStatus timer_init(sTimerDriver *self);                                     <-- PROTECTS ITSELF and restores interrupt flags. Sets up a 100 Hz timer
+    void timer_deinit(sTimerDriver *self);                                      <-- PROTECTS ITSELF and restores interrupt flags. Disables the timer
+    eStatus timer_register(sTimerDriver *self, sEventQueue *e, uint8_t ticks);  <-- PROTECTS ITSELF and restores interrupt flags. Registers queue to be notified every ticks ticks
+    static void timer_tick(sTimerDriver *self);                                 <-- Called in the timer ISR routine. Moves system time forward one tick
+    static void timer_notify(sTimerDriver *self, uint8_t ticks);                <-- Called by timer_tick. Messages event queues that ticks ticks have elapsed if they registered for the notification.
 
 twi_driver
-    eStatus twi_init(twi_driver *self);                                         <-- PROTECTS ITSELF and restores interrupt flags. 
-    void twi_deinit(twi_driver *self);                                          <-- PROTECTS ITSELF and restores interrupt flags. 
-    eStatus twi_get(twi_driver *self, uint8_t addr, uint8_t reg, uint8_t dest); <-- Not critical. Will not return until the TWI command is complete.
-    eStatus twi_put(twi_driver *self, uint8_t addr, uint8_t reg, uint8_t src);  <-- Not critical. Will not return until the TWI command is complete.
+    eStatus twi_init(sTWIDriver *self);                                         <-- PROTECTS ITSELF and restores interrupt flags. 
+    void twi_deinit(sTWIDriver *self);                                          <-- PROTECTS ITSELF and restores interrupt flags. 
+    eStatus twi_get(sTWIDriver *self, uint8_t addr, uint8_t reg, uint8_t dest); <-- Not critical. Will not return until the TWI command is complete.
+    eStatus twi_put(sTWIDriver *self, uint8_t addr, uint8_t reg, uint8_t src);  <-- Not critical. Will not return until the TWI command is complete.
 
 uart_driver
-    eStatus uart_init(uart_driver *self);                                       <-- PROTECTS ITSELF. and restores interrupt flags 
-    void uart_deinit(uart_driver *self);                                        <-- PROTECTS ITSELF and restores interrupt flags. 
-    eStatus uart_register(uart_driver *self, sampler *client);                  <-- PROTECTS ITSELF and restores interrupt flags. 
-    eUARTMessage uart_receive(uart_driver *self);                               <-- PROTECTS ITSELF and restores interrupt flags. 
-    eStatus uart_transmit(uart_driver *self, data *src);                        <-- Not critical. Will not return until the entire data structure has been sent out successfully.
-    static void uart_notify(uart_driver *self, eUARTMessage m);                 <-- Called in the UART IAR routine on RX events.
+    eStatus uart_init(sUARTDriver *self);                                       <-- PROTECTS ITSELF. and restores interrupt flags 
+    void uart_deinit(sUARTDriver *self);                                        <-- PROTECTS ITSELF and restores interrupt flags. 
+    eStatus uart_register(sUARTDriver *self, sSampler *client);                 <-- PROTECTS ITSELF and restores interrupt flags. 
+    eStatus uart_receive(sUARTDriver *self, eUARTMessage *m);                   <-- PROTECTS ITSELF and restores interrupt flags. 
+    eStatus uart_transmit(sUARTDriver *self, sData *src);                       <-- Not critical. Will not return until the entire data structure has been sent out successfully.
+    static void uart_notify_message_received(sUARTDriver *self, eUARTMessage m);<-- Called in the UART IAR routine on RX events.
 
 event_queue
-    eStatus event_queue_init(event_queue *self);                                <-- PROTECTS ITSELF and restores interrupt flags. 
-    void event_queue_deinit(event_queue *self);                                 <-- PROTECTS ITSELF and restores interrupt flags. 
-    eStatus event_queue_enqueue(event_queue *self, e *src);                     <-- Called by ISRs only.
-    eStatus event_queue_dequeue(event_queue *self, event *dest);                <-- PROTECTS ITSELF and restores interrupt flags. 
+    eStatus event_queue_init(sEventQueue *self);                                <-- PROTECTS ITSELF and restores interrupt flags. 
+    void event_queue_deinit(sEventQueue *self);                                 <-- PROTECTS ITSELF and restores interrupt flags. 
+    eStatus event_queue_enqueue(sEventQueue *self, eEvent type, uint8_t data);  <-- Called by ISRs only.
+    eStatus event_queue_dequeue(sEventQueue *self, eEvent *type, uint8_t *data);<-- PROTECTS ITSELF and restores interrupt flags. 
 
 sample_queue
-    eStatus sample_queue_init(sample_queue *self);                              <-- PROTECTS ITSELF and restores interrupt flags.  
-    void sample_queue_deinit(sample_queue *self);                               <-- PROTECTS ITSELF and restores interrupt flags. 
-    eStatus sample_queue_enqueue(sample_queue *self, data *src);                <-- Not critical.
-    eStatus sample_queue_dequeue(sample_queue *self, data *dest);               <-- Not critical.
+    eStatus sample_queue_init(sSampleQueue *self);                              <-- PROTECTS ITSELF and restores interrupt flags.  
+    void sample_queue_deinit(sSampleQueue *self);                               <-- PROTECTS ITSELF and restores interrupt flags. 
+    eStatus sample_queue_enqueue(sSampleQueue *self, sData *src);               <-- Not critical.
+    eStatus sample_queue_dequeue(sSampleQueue *self, sData *dest);              <-- Not critical.
 
 sampler
-    eStatus sampler_init(sampler *self, event_queue *e, sample_queue *s);       <-- Not critical.
-    void sampler_deinit(sampler *self);                                         <-- Not critical.
-    eStatus sampler_run(sampler *self);                                         <-- Not critical. Runs sampler loop. Should never return.
+    eStatus sampler_init(sSampler *self, sEventQueue *e, sSampleQueue *s);      <-- Not critical.
+    void sampler_deinit(sSampler *self);                                        <-- Not critical.
+    eStatus sampler_run(sSampler *self);                                        <-- Not critical. Runs sampler loop. Should never return.
 
 
 To Do --
