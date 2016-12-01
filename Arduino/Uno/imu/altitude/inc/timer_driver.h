@@ -10,11 +10,11 @@
 #define _TIMER_DRIVER_H_
 
 #include "config.h"
-#include "types.h"
-#include <math.h>  
-#include "event_queue.h"
 #include "io.h"
 #include "interrupts.h"
+#include "types.h"
+#include "stdmath.h"
+#include "event_queue.h"
 
 #if AVR
 /** 

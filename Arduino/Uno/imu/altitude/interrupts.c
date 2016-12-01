@@ -1,7 +1,9 @@
 #include "interrupts.h"
 
+#if AVR
 static eStatus mcu_flags_saved;
 static uint8_t mcu_flags;
+#endif
 
 void _PROTECT(eInterruptRequest save_flags) {
 #if AVR
@@ -10,6 +12,8 @@ void _PROTECT(eInterruptRequest save_flags) {
         mcu_flags_saved = ktrue; 
     }
     cli();
+#else
+    (void) save_flags;
 #endif
 }
 
@@ -20,5 +24,7 @@ void _RELEASE(eInterruptRequest restore_flags) {
     } else if (restore_flags == kinterrupt_do_not_restore_flags) {
         sei();
     }   
+#else
+    (void) restore_flags;
 #endif
 }

@@ -60,6 +60,8 @@ static bool _compare_ticks (sTicks *a, sTicks *b) {
 }
 
 int main (int argc, char **argv) {    
+    (void) argc; (void) argv;
+
     // Vector 1: Does the timer reject clients when its registry is full?
     if (!_check(ksuccess == timer_init(&timer, &clients[0], MAX_CLIENTS))) { return 1; } 
     int k;

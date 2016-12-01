@@ -10,6 +10,7 @@
 #define _INTERRUPTS_H_
 
 #include "config.h"
+#include "types.h"
 
 #if AVR
 #include <avr/io.h> 

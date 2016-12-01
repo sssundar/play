@@ -8,11 +8,12 @@ HEADERS += -I./inc/
 
 FLAGS = 
 FLAGS += -Wall
+FLAGS += -Werror
+FLAGS += -Wextra
 FLAGS += -std=c99
 FLAGS += $(HEADERS)
 
 SOURCES =
-SOURCES += io.c
 SOURCES += interrupts.c
 SOURCES += event_queue.c
 SOURCES += timer_driver.c
@@ -24,8 +25,7 @@ test-timer_driver:
 	gcc $(FLAGS) -g test_timer_driver.c $(SOURCES) -o test_timer_driver
 	#./test_timer_driver 
 
-clean:	
-	rm -f ./*.o
+clean:		
 	rm -f ./inc/config.h
 	rm -f ./test_timer_driver	
 

@@ -1,9 +1,10 @@
 #ifndef _EVENT_QUEUE_H_
 #define _EVENT_QUEUE_H_
 
+#include "config.h"
 #include "types.h"
-#include <math.h>  
 #include "interrupts.h"
+#include "stdmath.h"
 
 /** 
   * @details 

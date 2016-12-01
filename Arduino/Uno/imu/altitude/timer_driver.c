@@ -28,10 +28,10 @@ static void timer_update_wait_counters(sTimerDriver *timer) {
     int8_t k;
     sTimerClient *c = timer->clients;
     for (k = 0; k < timer->num_clients; k++) {
-        c.ticks_left_till_notification -= 1;
-        if (c.ticks_left_till_notification == 0) {
-            timer_notify(c->client, c.ticks_per_notification);
-            c.ticks_left_till_notification = c.ticks_per_notification;
+        c->ticks_left_till_notification -= 1;
+        if (c->ticks_left_till_notification == 0) {
+            timer_notify(c->client, c->ticks_per_notification);
+            c->ticks_left_till_notification = c->ticks_per_notification;
         }
         c++;
     }
@@ -68,7 +68,7 @@ ISR(TIMER0_COMPA_vect) {
 }
 #else
 void ISR_TIMER(sTimerDriver *timer) {
-    timer_increment_ticks(&timer);
+    timer_increment_ticks(timer);
 }
 #endif
 
@@ -130,6 +130,7 @@ eStatus timer_register(sTimerDriver *timer, sEventQueue *client, uint8_t ticks) 
 }
 
 eStatus timer_get_ticks (sTimerDriver *timer, sTicks *ticks) {
+    if ((timer == NULL) || (ticks == NULL)) { return kerror; }
     _PROTECT(kinterrupt_save_flags);    
     int8_t k;
     sTicks *t = &(timer->ticks);
@@ -137,4 +138,5 @@ eStatus timer_get_ticks (sTimerDriver *timer, sTicks *ticks) {
         ticks->count[k] = t->count[k];
     }    
     _RELEASE(kinterrupt_restore_flags);
+    return ksuccess;
 }
