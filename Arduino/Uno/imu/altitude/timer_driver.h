@@ -82,7 +82,8 @@ void timer_deinit(sTimerDriver *timer);
   * @param [in] timer an initialized timer driver object
   * @param [in] client an event queue to be notified 
   * @param [in] ticks the period of notification in clock ticks for this timer
-  * @return #ksuccess: Client successfully registered.
+  * @return #ksuccess: Client queue successfully registered.
+  * @return #kerror: Client queue or timer driver is null.
   * @return #kfailure: Out of memory in client registry. Client not registered.
   */
 eStatus timer_register(sTimerDriver *timer, sEventQueue *client, uint8_t ticks);  
@@ -95,8 +96,10 @@ eStatus timer_register(sTimerDriver *timer, sEventQueue *client, uint8_t ticks);
   *
   * @param [in] timer an initialized timer driver object
   * @param [in] ticks the destination ticks structure to write to
+  * @return #kerror: timer or ticks are null.
+  * @return #ksuccess: successfully copied over current tick count
   */
-void timer_get_ticks (sTimerDriver *timer, sTicks *ticks); 
+eStatus timer_get_ticks (sTimerDriver *timer, sTicks *ticks); 
 
 #endif 
 // _TIMER_DRIVER_H_
