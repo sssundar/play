@@ -88,12 +88,14 @@ eStatus timer_init(sTimerDriver *timer, sTimerClient *clients, uint8_t max_clien
     timer->num_clients = 0;
     timer->clients = clients;       
 
+#if AVR
     /* Set up 199.8 Hz interrupt on Timer0 */
     TCCR0A = 0x02;                      // No compare outputs enabled on IO pins
                                         // Clear on compare 
     TCCR0B = 0x05;                      // 1024-prescaler off 16MHz base clock  
     OCR0A = 0x52;                       // Compare at 82 
-    TIMSK0 = 0x02;                      // Interrupt at comparison equality         
+    TIMSK0 = 0x02;                      // Interrupt at comparison equality
+#endif
 
     _RELEASE(kinterrupt_restore_flags);
     return ksuccess;
@@ -105,7 +107,9 @@ void timer_deinit(sTimerDriver *timer) {
     timer->max_clients = 0;        
     timer->num_clients = 0;
     timer->clients = NULL;
+#if AVR
     TIMSK0 = 0x00;                  // Do not interrupt at comparison equality
+#endif 
     _RELEASE(kinterrupt_restore_flags);    
 }                                     
 

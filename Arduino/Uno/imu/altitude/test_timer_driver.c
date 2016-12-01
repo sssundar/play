@@ -21,7 +21,7 @@ static sTicks observed_ticks, test_ticks;
 /* Helper Functions */
 static int test_vector = 0;
 static int check_number = 0;
-stativ void _next_test_vector (void) {
+static void _next_test_vector (void) {
     test_vector++;
     check_number = 0;
 }
@@ -47,11 +47,12 @@ static void _drive_n_timer_interrupts(int n, sTicks *ticks) {
 }
 
 static void _clear_ticks (sTicks *ticks) {
-    for (k = CLOCK_BYTE_WIDTH; k > -1; k--) { ticks.count[k] = 0; }
+    int k; for (k = CLOCK_BYTE_WIDTH; k > -1; k--) { ticks->count[k] = 0; }
 }
 
 static bool _compare_ticks (sTicks *a, sTicks *b) {
     bool res = true;
+    int k;
     for (k = CLOCK_BYTE_WIDTH; k > -1; k--) { 
         res = res && (a->count[k] == b->count[k]); 
     }
@@ -60,7 +61,7 @@ static bool _compare_ticks (sTicks *a, sTicks *b) {
 
 int main (int argc, char **argv) {    
     // Vector 1: Does the timer reject clients when its registry is full?
-    if (!_check(ksuccess == timer_init(&timer, &clients, MAX_CLIENTS))) { return 1; } 
+    if (!_check(ksuccess == timer_init(&timer, &clients[0], MAX_CLIENTS))) { return 1; } 
     int k;
     for (k = 0; k < MAX_CLIENTS; k++) {
         if (!_check(ksuccess == timer_register(&timer, &client[0], 1))) { return 1; } 
@@ -70,9 +71,9 @@ int main (int argc, char **argv) {
     _next_test_vector();
     
     // Vector 2: Does the timer return and update its ticks?
-    timer_init(&timer, &clients, MAX_CLIENTS));
+    timer_init(&timer, &clients[0], MAX_CLIENTS);
     _clear_ticks(&test_ticks); // This is our test clock against which we compare the timer clock for accuracy
-    if (!_check(ksuccess == timer_get_ticks (&timer, &observed_ticks)) { return 1; };     
+    if (!_check(ksuccess == timer_get_ticks (&timer, &observed_ticks))) { return 1; };     
     if (!_check(_compare_ticks(&test_ticks,&observed_ticks))) { return 1; }         
     _drive_n_timer_interrupts(2, &test_ticks);
     if (!_check(_compare_ticks(&test_ticks,&observed_ticks))) { return 1; }     

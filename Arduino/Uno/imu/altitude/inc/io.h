@@ -17,11 +17,6 @@
 
 #if AVR
 #include <avr/io.h> 
-#else
-extern uint8_t TCCR0A;
-extern uint8_t TCCR0B;
-extern uint8_t OCR0A;
-extern uint8_t TIMSK0;
 #endif
 
 #endif
