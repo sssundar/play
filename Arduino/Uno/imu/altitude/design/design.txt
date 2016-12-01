@@ -27,6 +27,8 @@ die();
 
 PySerial Main Flow --
 ---------------------
+Send a config signal
+Read and store the configuration
 Send a start signal 
 Log data for 10 seconds
 Send an end signal
@@ -61,16 +63,15 @@ twi_driver
 uart_driver
     eStatus uart_init(sUARTDriver *self);                                       <-- PROTECTS ITSELF. and restores interrupt flags 
     void uart_deinit(sUARTDriver *self);                                        <-- PROTECTS ITSELF and restores interrupt flags. 
-    eStatus uart_register(sUARTDriver *self, sSampler *client);                 <-- PROTECTS ITSELF and restores interrupt flags. 
-    eStatus uart_receive(sUARTDriver *self, eUARTMessage *m);                   <-- PROTECTS ITSELF and restores interrupt flags. 
+    eStatus uart_register(sUARTDriver *self, eEventQueue *e);                   <-- PROTECTS ITSELF and restores interrupt flags. 
     eStatus uart_transmit(sUARTDriver *self, sData *src);                       <-- Not critical. Will not return until the entire data structure has been sent out successfully.
-    static void uart_notify_message_received(sUARTDriver *self, eUARTMessage m);<-- Called in the UART IAR routine on RX events.
+    static void uart_receive(sUARTDriver *self);                                <-- Called in the UART IAR routine on RX events.
 
 event_queue
     eStatus event_queue_init(sEventQueue *self);                                <-- PROTECTS ITSELF and restores interrupt flags. 
     void event_queue_deinit(sEventQueue *self);                                 <-- PROTECTS ITSELF and restores interrupt flags. 
-    eStatus event_queue_enqueue(sEventQueue *self, eEvent type, uint8_t data);  <-- Called by ISRs only.
-    eStatus event_queue_dequeue(sEventQueue *self, eEvent *type, uint8_t *data);<-- PROTECTS ITSELF and restores interrupt flags. 
+    eStatus event_queue_enqueue(sEventQueue *self, sEvent event);               <-- Called by ISRs only.
+    eStatus event_queue_dequeue(sEventQueue *self, sEvent *event);              <-- PROTECTS ITSELF and restores interrupt flags. 
 
 sample_queue
     eStatus sample_queue_init(sSampleQueue *self);                              <-- PROTECTS ITSELF and restores interrupt flags.  
@@ -86,7 +87,7 @@ sampler
 
 To Do --
 --------
-# Implement and test incrementally. Commit often.
+# Implement and test incrementally. Commit often. 
 # Test on-device, sampling at 100Hz, 25Hz, and 1Hz, and talking to the Barometer/Thermometer. Just raw-dump data on the laptop side.
 # Introduce post-processing on the laptop side
 # Try for a real-time plotting library
