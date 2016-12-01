@@ -22,7 +22,7 @@ all: test-timer_driver
 test-timer_driver:		
 	python config.py gcc > ./inc/config.h
 	gcc $(FLAGS) -g test_timer_driver.c $(SOURCES) -o test_timer_driver
-	./test_timer_driver 
+	#./test_timer_driver 
 
 clean:	
 	rm -f ./*.o
