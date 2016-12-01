@@ -9,6 +9,13 @@
 #ifndef _INTERRUPTS_H_
 #define _INTERRUPTS_H_
 
+#include "config.h"
+
+#if AVR
+#include <avr/io.h> 
+#include <avr/interrupt.h>
+#endif
+
 typedef enum eInterruptRequest {
   kinterrupt_do_not_save_flags,
   kinterrupt_save_flags,

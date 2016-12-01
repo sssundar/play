@@ -9,8 +9,12 @@
 #ifndef _TIMER_DRIVER_H_
 #define _TIMER_DRIVER_H_
 
+#include "config.h"
 #include "types.h"
+#include <math.h>  
 #include "event_queue.h"
+#include "io.h"
+#include "interrupts.h"
 
 /**
   * @details
@@ -33,16 +37,16 @@ typedef struct sTicks {
 typedef struct sTimerClient {
     uint8_t ticks_per_notification;         // constant once initialized
     uint8_t ticks_left_till_notification;   // counts down
-    sEventQueue client;                     // who to notify
+    sEventQueue *client;                    // who to notify
 } sTimerClient;
 
 /**
   * @details 
   * A Timer Driver object 
   */
-typedef struct sTimerDriver {
-    sTicks ticks;               // Counts up to 2.9 hours at 
-                                //  100 Hz counting up a 24 bit sTicks.   
+typedef struct sTimerDriver {    
+    sTicks ticks;               // Counts up to 1.45 hours at 
+                                //  200 Hz counting up a 24 bit sTicks.   
     uint8_t max_clients;        // How many clients this timer supports.
     uint8_t num_clients;        // How many clients are registered
     sTimerClient *clients;      // num_clients length array of clients
@@ -54,7 +58,8 @@ typedef struct sTimerDriver {
   * @details
   * This function saves the interrupt state then disables interrupts. 
   * It sets up a 199.8 Hz timer driver object controlling Timer 0 
-  * (16 MHz / (1024 Prescaler * 82) = 199.8 Hz).
+  * (16 MHz / (1024 Prescaler * 82) = 199.8 Hz). It then
+  * restores interrupt state.
   *
   * @param [in] timer an uninitialized timer driver object  
   * @param [in] clients a pointer to a sTimerClient array of length num_clients
@@ -67,7 +72,7 @@ eStatus timer_init(sTimerDriver *timer, sTimerClient *clients, uint8_t max_clien
 /**
   * @details
   * This function saves the interrupt state then disables interrupts. 
-  * It disables Timer 0.
+  * It disables Timer 0. It then restores interrupt state.
   *
   * @param [in] timer an initialized timer driver object  
   */
@@ -77,7 +82,8 @@ void timer_deinit(sTimerDriver *timer);
   * @details
   * This function saves the interrupt state then disables interrupts. 
   * It registers an event queue to the timer to be notified every
-  * ticks ticks with [eEvent: ktimer_event, data: ticks].
+  * ticks ticks with [eEvent: ktimer_event, data: ticks]. It then
+  * restores interrupt state.
   * 
   * @param [in] timer an initialized timer driver object
   * @param [in] client an event queue to be notified 
@@ -92,7 +98,8 @@ eStatus timer_register(sTimerDriver *timer, sEventQueue *client, uint8_t ticks);
   * @details
   * This function saves the interrupt state then disables interrupts.
   * It retrieves the specified timer's tick count, which can be easily
-  * multiplied by its true period to get a physical time.
+  * multiplied by its true period to get a physical time. It then
+  * restores interrupt state.
   *
   * @param [in] timer an initialized timer driver object
   * @param [in] ticks the destination ticks structure to write to

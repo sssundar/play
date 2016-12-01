@@ -1,4 +1,3 @@
-#include "config.h"
 #include "io.h"
 
 #if AVR == 0

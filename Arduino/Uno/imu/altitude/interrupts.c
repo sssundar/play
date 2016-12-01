@@ -1,10 +1,4 @@
-#include "config.h"
-
-#if AVR
-#include "types.h"
-#include <avr/io.h> 
-#include <avr/interrupt.h>
-#endif
+#include "interrupts.h"
 
 static eStatus mcu_flags_saved;
 static uint8_t mcu_flags;
