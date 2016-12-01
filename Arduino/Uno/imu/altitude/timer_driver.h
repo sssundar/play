@@ -53,32 +53,50 @@ typedef struct sTimerDriver {
 /** 
   * @details
   * This function saves the interrupt state then disables interrupts. 
-  * It sets up a 99.9 Hz timer driver object controlling Timer 0.
+  * It sets up a 199.8 Hz timer driver object controlling Timer 0 
+  * (16 MHz / (1024 Prescaler * 82) = 199.8 Hz).
   *
-  * @param [in] self an uninitialized timer driver object  
+  * @param [in] timer an uninitialized timer driver object  
   * @param [in] clients a pointer to a sTimerClient array of length num_clients
   * @param [in] max_clients the size of clients
+  * @return #kerror: One or more of the pointers input were invalid.
+  * @return #ksuccess: Successfully initialized timer driver.
   */
-void timer_init(sTimerDriver *self, sTimerClient *clients, uint8_t max_clients);
+eStatus timer_init(sTimerDriver *timer, sTimerClient *clients, uint8_t max_clients);
 
 /**
   * @details
   * This function saves the interrupt state then disables interrupts. 
   * It disables Timer 0.
   *
-  * @param [in] self an initialized timer driver object  
+  * @param [in] timer an initialized timer driver object  
   */
-void timer_deinit(sTimerDriver *self);                                      
+void timer_deinit(sTimerDriver *timer);                                      
 
 /**
   * @details
-  * This function registers an event queue to the timer to be notified every
-  * ticks ticks with [eEvent: ktimer_event, data: ticks] 
+  * This function saves the interrupt state then disables interrupts. 
+  * It registers an event queue to the timer to be notified every
+  * ticks ticks with [eEvent: ktimer_event, data: ticks].
+  * 
+  * @param [in] timer an initialized timer driver object
+  * @param [in] client an event queue to be notified 
+  * @param [in] ticks the period of notification in clock ticks for this timer
+  * @return #ksuccess: Client successfully registered.
+  * @return #kfailure: Out of memory in client registry. Client not registered.
   */
-eStatus timer_register(sTimerDriver *self, sEventQueue *e, uint8_t ticks);  
-static void timer_increment_ticks(sTimerDriver *self);                      
-static void timer_notify(sTimerDriver *self, uint8_t ticks);                
-void timer_get_ticks (sTicks *dest); 
+eStatus timer_register(sTimerDriver *timer, sEventQueue *client, uint8_t ticks);  
+
+/**
+  * @details
+  * This function saves the interrupt state then disables interrupts.
+  * It retrieves the specified timer's tick count, which can be easily
+  * multiplied by its true period to get a physical time.
+  *
+  * @param [in] timer an initialized timer driver object
+  * @param [in] ticks the destination ticks structure to write to
+  */
+void timer_get_ticks (sTimerDriver *timer, sTicks *ticks); 
 
 #endif 
 // _TIMER_DRIVER_H_
