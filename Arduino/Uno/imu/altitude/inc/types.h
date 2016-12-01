@@ -3,11 +3,11 @@
 
 /* Common status values */
 typedef enum eStatus {
-	kfalse,
-	ktrue,
-	kfailure,
-	kerror,
-	ksuccess
+    kfalse,
+    ktrue,
+    kfailure,
+    kerror,
+    ksuccess
 } eStatus;
 
 #endif 

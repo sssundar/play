@@ -13,5 +13,5 @@ static sTimerDriver driver;
 static sTimerClient client; 
 
 int main (int argc, char **argv) {
-	timer_init(self, sTimerClient *clients, uint8_t max_clients);
+    timer_init(self, sTimerClient *clients, uint8_t max_clients);
 }

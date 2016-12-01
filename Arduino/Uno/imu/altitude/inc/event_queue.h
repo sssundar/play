@@ -10,8 +10,8 @@
   * Supported event types 
   */
 typedef enum eEventType {
-	kevent_timer, 			// a timer notification event 
-	kevent_serial_rx 		// a serial packet received event
+  kevent_timer,       // a timer notification event 
+  kevent_serial_rx    // a serial packet received event
 } eEventType;
 
 /** 
@@ -19,8 +19,8 @@ typedef enum eEventType {
   * An event consists of a type and a byte of data
   */
 typedef struct sEvent {
-	eEventType type;
-	uint8_t data;
+  eEventType type;
+  uint8_t data;
 } sEvent;
 
 /**
@@ -28,7 +28,7 @@ typedef struct sEvent {
   * TODO Implement
   */
 typedef struct sEventQueue {
-	uint8_t ignored;
+  uint8_t ignored;
 } sEventQueue; 
 
 /** 
