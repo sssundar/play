@@ -45,7 +45,7 @@ static void timer_update_wait_counters(sTimerDriver *timer) {
   * 
   * @param [in] timer an initialized timer driver object 
   */
-static void timer_increment_ticks(sTimerDriver *timer) {
+static void timer_increment_ticks(sTimerDriver *timer) {  
     int8_t k;  
     sTicks *t = &(timer->ticks);
     for (k = CLOCK_BYTE_WIDTH-1; k > -1; k--) {
@@ -58,7 +58,19 @@ static void timer_increment_ticks(sTimerDriver *timer) {
     timer_update_wait_counters(timer);
 }                    
 
-/* Interrupt service routine for the timer controlled by this driver */
+/**
+  * @details
+  * Interrupt service routine for the timer, Timer 0, controlled by this driver
+  */
+#if AVR
+ISR(TIMER0_COMPA_vect) {                    
+    timer_increment_ticks(&timer0);
+}
+#else
+void ISR_TIMER(sTimerDriver *timer) {
+    timer_increment_ticks(&timer);
+}
+#endif
 
 /* Public API */
 
