@@ -6,13 +6,12 @@
 
 Objects --
 ----------
-timer_driver
-twi_driver
-uart_driver
-sampler
-timer_event_queue
-sample_queue
-
+timer_driver        (tested in sw)
+sample_queue    
+event_queue         
+uart_driver         
+twi_driver          
+sampler             
 
 Uno Main Flow --
 ----------------
@@ -88,7 +87,8 @@ sampler
 To Do --
 --------
 # Implement and test incrementally. Commit often. 
-# Test on-device, sampling at 100Hz, 25Hz, and 1Hz, and talking to the Barometer/Thermometer. Just raw-dump data on the laptop side.
+# Test on-device a little at a time, making sure interrupts are being called at each stage.
+# Try sampling at 200Hz, 25Hz, and 1Hz, and talking to the Barometer/Thermometer. Just raw-dump data on the laptop side.
 # Introduce post-processing on the laptop side
 # Try for a real-time plotting library
 # Introduce a logger in non-volatile memory and PySerial commands to dump logs
