@@ -12,9 +12,9 @@
   * @date 2016-12-03
   * @details 
   * A circular queue object of fixed length, intended to buffer system events
-  * The length is fixed at 31 events, or 62 bytes / 2kB SRAM.
-  * This queue structure has exactly one 1 dead data element, even when full.
-*/
+  * The length is fixed at EVENT_QUEUE_LENGTH exluding the one dead data element
+  * when the queue is full. 
+  */
 
 /** 
   * @details 

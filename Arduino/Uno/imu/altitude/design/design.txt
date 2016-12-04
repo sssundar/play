@@ -7,8 +7,8 @@
 Objects --
 ----------
 timer_driver        (tested in sw)
-sample_queue    
-event_queue         
+event_queue         (tested in sw)
+sample_queue        
 uart_driver         
 twi_driver          
 sampler             

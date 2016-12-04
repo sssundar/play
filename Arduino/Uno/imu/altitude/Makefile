@@ -18,15 +18,23 @@ SOURCES += interrupts.c
 SOURCES += event_queue.c
 SOURCES += timer_driver.c
 
-all: clean test-timer_driver 
+all: clean
+
+test: clean test-timer_driver test-event_queue
 
 test-timer_driver: 
 	python config.py gcc > ./inc/config.h
 	gcc $(FLAGS) -Wl,--wrap=eventq_enqueue -g test_timer_driver.c test_helpers.c $(SOURCES) -o test_timer_driver
 	./test_timer_driver 
 
+test-event_queue:
+	python config.py gcc > ./inc/config.h
+	gcc $(FLAGS) -g test_event_queue.c test_helpers.c $(SOURCES) -o test_event_queue
+	./test_event_queue
+
 clean:		
 	rm -f ./inc/config.h
 	rm -f ./test_timer_driver	
+	rm -f ./test_event_queue
 
-.PHONY: clean all
+.PHONY: clean all test
