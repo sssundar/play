@@ -30,7 +30,7 @@ eStatus data_get_type(const sData* restrict data, eDataType* restrict type) {
 eStatus data_add_byte(sData *data, uint8_t byte) {
     if (data == NULL) { return kerror; }
     if (data->num_bytes >= data->max_bytes) { return kerror; }
-    data->bytes[num_bytes] = byte;
+    data->bytes[data->num_bytes] = byte;
     data->num_bytes += 1;
     return ksuccess;
 }

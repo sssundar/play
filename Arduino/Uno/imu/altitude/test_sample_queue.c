@@ -14,7 +14,7 @@
 
 /* Unit under test */
 static sSampleQueue uut;
-static sData test_data;
+static sData test_data, observed_data;
 static uint8_t test_bytes[MAX_DATA_BYTES];
 static sTicks test_clock;
 
@@ -40,7 +40,7 @@ static void set_test_bytes_ (uint8_t msb, uint8_t misb, uint8_t lsb) {
 }
 
 static bool create_sample_(sData *data, eDataType type, uint8_t *bytes, uint8_t num_bytes, sTicks *timestamp) {
-    bool success = false;
+    bool success = true;
     success = success & (ksuccess == data_set_type(data, type));
     int k;
     for (k = 0; k < num_bytes; k++) {
@@ -66,8 +66,8 @@ static bool compare_samples_(sData *a, sData *b) {
     data_get_bytes(a,abytes,&alen);
     data_get_bytes(b,bbytes,&blen);
     bytes = (alen == blen);
-    if (bytes) {
-        int k;
+    int k;
+    if (bytes) {        
         for (k = 0; k < alen; k++) {
             bytes = bytes && (abytes[k] == bbytes[k]);
         }
@@ -163,6 +163,6 @@ int main (int argc, char **argv) {
     if (!check(test_data.bytes[1] == 2)) { return 1; }
     if (!check(test_data.bytes[2] == 0)) { return 1; }
     increment_test_vector();   
-    
+
     return 0;
 }
