@@ -18,7 +18,7 @@ eStatus eventq_enqueue (sEventQueue* restrict queue, const sEvent* restrict even
     if ((queue == NULL) || (event == NULL)) { return kerror; }
     eStatus status = kfailure;
     _PROTECT(kinterrupt_save_flags);       
-    uint8_t next_tail = (queue->tail + 1) && EVENT_QUEUE_LENGTH;
+    uint8_t next_tail = (queue->tail + 1) & EVENT_QUEUE_LENGTH;
     if (next_tail != queue->head) {
         sEvent *e = &(queue->buffer[queue->tail]);                                 
         *e = *event;
@@ -35,7 +35,7 @@ eStatus eventq_dequeue(sEventQueue* restrict queue, sEvent* restrict event) {
     _PROTECT(kinterrupt_save_flags);   
     if (queue->tail != queue->head) {
         *event = queue->buffer[queue->head];
-        queue->head = (queue->head + 1) && EVENT_QUEUE_LENGTH;
+        queue->head = (queue->head + 1) & EVENT_QUEUE_LENGTH;
         status = ksuccess;
     }    
     _RELEASE(kinterrupt_restore_flags);    

@@ -52,22 +52,22 @@ int main (int argc, char **argv) {
     /* Vector 2: Test full and empty conditions */
     eventq_init(&uut);
     int k = 0;
-    do {
+    do {                
         create_event_(&test_event, k % 2 == 1 ? kevent_serial_rx : kevent_timer, k); 
-        k++;
-        fprintf(stderr, "k: %d, tail: %d, head: %d\n", k, uut.tail, uut.head);
+        k++;        
     } while (eventq_enqueue(&uut, &test_event) == ksuccess);
-    
-    if (!check(EVENT_QUEUE_LENGTH == k)) { return 1; }
+        
+    if (!check(EVENT_QUEUE_LENGTH+1 == k)) { return 1; }
 
-    k--;
+    k = 0;
     while (eventq_dequeue(&uut, &observed_event) == ksuccess) {
         create_event_(&test_event, k % 2 == 1 ? kevent_serial_rx : kevent_timer, k); 
         if (!check(compare_events_(&test_event, &observed_event))) { return 1; }
-        k--;   
-    }                
+        k++;
+    }                    
 
-    if (!check(0 == k)) { return 1; }
+    if (!check(EVENT_QUEUE_LENGTH == k)) { return 1; }
+    increment_test_vector();   
 
     /* Vector 3: Test wraparound */
     eventq_init(&uut);
@@ -83,7 +83,7 @@ int main (int argc, char **argv) {
         k++;
     } while (eventq_enqueue(&uut, &test_event) == ksuccess);
 
-    if (!check(uut.buffer[0].data == k-1)) { return 1; }    
+    if (!check(uut.buffer[0].data == k-2)) { return 1; }    
 
     return 0;
 }
