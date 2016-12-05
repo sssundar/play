@@ -127,5 +127,17 @@ eStatus timer_register(sTimerDriver *timer, sEventQueue *client, uint8_t ticks);
   */
 eStatus timer_get_ticks (sTimerDriver *timer, sTicks *ticks); 
 
+/**
+  * @details
+  * This function is not interrupt safe. It copies over ticks from one
+  * sTicks to another.
+  *
+  * @param [in] src the source 
+  * @param [in] dst the destination
+  * @return #kerror: either pointer is null
+  * @return #ksuccess: successful
+  */
+eStatus timer_copy_ticks (const sTicks* restrict src, sTicks* restrict dst); 
+
 #endif 
 // _TIMER_DRIVER_H_

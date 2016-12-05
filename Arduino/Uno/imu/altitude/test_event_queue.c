@@ -37,9 +37,6 @@ int main (int argc, char **argv) {
     if (!check(ksuccess == eventq_init(&uut))) { return 1; }
     increment_test_vector();
 
-    eStatus eventq_enqueue(sEventQueue* restrict queue, const sEvent* restrict event);
-    eStatus eventq_dequeue(sEventQueue* restrict queue, sEvent* restrict event);   
-
     /* Vector 1: Empty queue enq and deq */
     create_event_(&test_event, kevent_serial_rx, 1);
     clear_event_(&observed_event);

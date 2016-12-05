@@ -1,11 +1,3 @@
-#ifndef _EVENT_QUEUE_H_
-#define _EVENT_QUEUE_H_
-
-#include "config.h"
-#include "types.h"
-#include "interrupts.h"
-#include "stdmath.h"
-
 /**
   * @file event_queue.h
   * @author Sushant Sundaresh
@@ -15,6 +7,14 @@
   * The length is fixed at EVENT_QUEUE_LENGTH exluding the one dead data element
   * when the queue is full. 
   */
+  
+#ifndef _EVENT_QUEUE_H_
+#define _EVENT_QUEUE_H_
+
+#include "config.h"
+#include "types.h"
+#include "interrupts.h"
+#include "stdmath.h"
 
 /** 
   * @details 

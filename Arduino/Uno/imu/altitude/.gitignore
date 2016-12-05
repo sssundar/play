@@ -1,3 +1,4 @@
 inc/config.h
-*.o
 test_timer_driver
+test_event_queue
+test_sample_queue

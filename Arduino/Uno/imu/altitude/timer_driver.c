@@ -140,3 +140,12 @@ eStatus timer_get_ticks (sTimerDriver *timer, sTicks *ticks) {
     _RELEASE(kinterrupt_restore_flags);
     return ksuccess;
 }
+
+eStatus timer_copy_ticks (const sTicks* restrict src, sTicks* restrict dst) {
+    if ((src == NULL) || (dst == NULL)) { return kerror; }
+    int8_t k;
+    for (k = CLOCK_BYTE_WIDTH-1; k > -1; k--) {
+        dst->count[k] = src->count[k];
+    }  
+    return ksuccess;  
+}

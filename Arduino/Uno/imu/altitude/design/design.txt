@@ -60,10 +60,10 @@ event_queue
     eStatus event_queue_dequeue(sEventQueue *self, sEvent *event);              
 
 sample_queue
-    eStatus sample_queue_init(sSampleQueue *self);                              <-- PROTECTS ITSELF and restores interrupt flags.  
-    void sample_queue_deinit(sSampleQueue *self);                               <-- PROTECTS ITSELF and restores interrupt flags. 
-    eStatus sample_queue_enqueue(sSampleQueue *self, sData *src);               <-- Not critical.
-    eStatus sample_queue_dequeue(sSampleQueue *self, sData *dest);              <-- Not critical.
+    eStatus sample_queue_init(sSampleQueue *self);                              
+    void sample_queue_deinit(sSampleQueue *self);                               
+    eStatus sample_queue_enqueue(sSampleQueue *self, sData *src);               
+    eStatus sample_queue_dequeue(sSampleQueue *self, sData *dest);              
 
 uart_driver
     eStatus uart_init(sUARTDriver *self);                                       <-- PROTECTS ITSELF. and restores interrupt flags 
@@ -91,3 +91,4 @@ To Do --
 # Introduce post-processing on the laptop side
 # Try for a real-time plotting library
 # Introduce a logger in non-volatile memory and PySerial commands to dump logs
+# Introduce an assert functionality that the preprocessor can remove with compile time flags
