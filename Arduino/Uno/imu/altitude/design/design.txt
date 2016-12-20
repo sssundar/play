@@ -66,12 +66,10 @@ sample_queue
     eStatus sample_queue_dequeue(sSampleQueue *self, sData *dest);              
 
 uart_driver
-    eStatus uart_init(sUARTDriver *self);                                       <-- PROTECTS ITSELF. and restores interrupt flags 
-    void uart_deinit(sUARTDriver *self);                                        <-- PROTECTS ITSELF and restores interrupt flags. 
-    eStatus uart_register(sUARTDriver *self, eEventQueue *e);                   <-- PROTECTS ITSELF and restores interrupt flags. 
-    eStatus uart_transmit(sUARTDriver *self, sData *src);                       <-- Not critical. Will not return until the entire data structure has been sent out successfully.
-    static void uart_receive(sUARTDriver *self);                                <-- Called in the UART IAR routine on RX events.
-
+    eStatus uart_init(sUARTDriver* restrict uart, sEventQueue* restrict to_notify_on_rx);  
+    void uart_deinit(sUARTDriver *uart);                                    
+    void uart_log(sUARTDriver* restrict uart, const sData* restrict data); 
+    
 twi_driver
     eStatus twi_init(sTWIDriver *self);                                         <-- PROTECTS ITSELF and restores interrupt flags. 
     void twi_deinit(sTWIDriver *self);                                          <-- PROTECTS ITSELF and restores interrupt flags. 

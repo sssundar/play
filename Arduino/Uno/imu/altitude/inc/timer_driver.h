@@ -16,15 +16,6 @@
 #include "stdmath.h"
 #include "event_queue.h"
 
-#if AVR
-/** 
-  * @details 
-  * Global statically allocated timer0 driver object that must be
-  * allocated and initialized by the user of this driver.
-  */
-extern sTimerDriver timer0;
-#endif
-
 /**
   * @details
   * An extended unsigned integer of CLOCK_BYTE_WIDTH bytes. Intended to increase
@@ -62,6 +53,15 @@ typedef struct sTimerDriver {
                                 //  clients will be notified in the order of
                                 //  registration
 } sTimerDriver;
+
+#if AVR
+/** 
+  * @details 
+  * Global statically allocated timer0 driver object that must be
+  * allocated and initialized by the user of this driver.
+  */
+extern sTimerDriver timer0;
+#endif
 
 #if AVR == 0
 /**
