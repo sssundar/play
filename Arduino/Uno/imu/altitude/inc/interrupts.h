@@ -4,6 +4,7 @@
   * @date 2016-11-30  
   * @details
   * Interrupt protection and restoration wrappers.
+  * Sleep wrappers for interrupt driven event handling.
   */
 
 #ifndef _INTERRUPTS_H_
@@ -41,6 +42,19 @@ void _PROTECT(eInterruptRequest save_flags);
   *              state, saved during a _PROTECT call.
   */
 void _RELEASE(eInterruptRequest restore_flags);
+
+/**
+  * @details 
+  * Allow low-power mode to idle-loop instead of busy-loop
+  */
+void _ENABLE_SLEEP(void);
+
+/**
+  * @details
+  * Puts the MCU into an idle sleep state, from which it can be woken by 
+  * interrupts.
+  */
+void _SLEEP(void);
 
 #endif
 // _INTERRUPTS_H_

@@ -28,3 +28,15 @@ void _RELEASE(eInterruptRequest restore_flags) {
     (void) restore_flags;
 #endif
 }
+
+void _ENABLE_SLEEP(void) {
+#if AVR
+    SMCR = 0x01; 
+#endif 
+}
+
+void _SLEEP(void) {
+#if AVR
+    sleep();
+#endif 
+}

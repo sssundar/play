@@ -60,6 +60,9 @@ typedef struct sUARTDriver {
     sData tx_data;          // Data to transmit
     uint8_t tx_byte_num;    // Which byte of the data
                             //  are we currently transmitting
+    uint8_t is_tx_done;     // You may cast this as an eStatus. 
+                            //  It is always either ktrue or kfalse, 
+                            //  so it can be atomically read.
 } sUARTDriver;
 
 #if AVR
@@ -76,16 +79,17 @@ extern sUARTDriver uart0;
   * @details
   * Mocked interrupt service routine for UART0 receive complete events, 
   *  controlled by this driver
-  * @param [in] uart an initialized uart driver object
+  * @param [in] uart an initialized uart driver object  
   */
-void ISR_UART_RX(sUARTDriver *uart);
+void ISR_USART_RX_MOCK(sUARTDriver *uart);
+
 /**
   * @details
   * Mocked interrupt service routine for UART0 transmit complete events, 
   *  controlled by this driver
-  * @param [in] uart an initialized uart driver object
+  * @param [in] uart an initialized uart driver object  
   */
-void ISR_UART_TX(sUARTDriver *uart);
+void ISR_USART_TX_MOCK(sUARTDriver *uart);
 #endif 
 
 /**
@@ -121,11 +125,15 @@ void uart_deinit(sUARTDriver *uart);
   * Transmits the sample data in its entirety, byte by byte, then returns.
   * This call is blocking from the perspective of the main loop but does not
   * protect itself from interrupts. It is transmitting roughly 7 bytes of data 
-  * at 9600 baud, which takes about 6 ms. 
+  * at 9600 baud, which takes about 6 ms. You must enable idle sleep via the 
+  * wrapper in interrupts.h if you want the internal loop to idle-wait for 
+  * transmission events.
   * @param [in] uart an initialized uart object
   * @param [in] data the data to transmit
+  * @return #kfailure: UART was not finished transmitting the last data sample.
+  * @return #ksuccess: UART transmitted your data sample
   */
-void uart_log(sUARTDriver* restrict uart, const sData* restrict data);    
+eStatus uart_log(sUARTDriver* restrict uart, const sData* restrict data);    
 
 #endif 
 // _UART_DRIVER_H_
