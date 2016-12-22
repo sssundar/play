@@ -20,6 +20,8 @@ static eStatus uart_byte_buffer_receive_ (sUARTDriver *uart, uint8_t *byte) {
 #if AVR
     rx_errors = (UCSR0A & (RX_FRAME_ERROR | DATA_OVERRUN | PARITY_ERROR));
     *byte = UDR0;
+#else
+    (void) byte;
 #endif
     return (rx_errors > 0) ? kerror : ksuccess;
 }
@@ -38,7 +40,9 @@ static void uart_byte_buffer_transmit_ (sUARTDriver *uart, uint8_t byte) {
     (void) uart;
 #if AVR
     UDR0 = byte;
-#endif    
+#else
+    (void) byte;
+#endif
 }
 
 /** 
@@ -53,9 +57,9 @@ static void uart_isr_receive_(sUARTDriver *uart) {
     uint8_t rx_byte;
     if (uart_byte_buffer_receive_(uart, &rx_byte) != ksuccess) { return; }
     sEvent rx_event = {
-        .type = kevent_serial_rx;
-        .data = rx_byte;
-    }
+        .type = kevent_serial_rx,
+        .data = rx_byte
+    };
     eventq_enqueue(uart->rx_client, &rx_event);    
 }
 
@@ -84,7 +88,7 @@ static void uart_isr_transmit_(sUARTDriver *uart) {
   * Byte receive complete interrupt routine for UART0, controlled by this driver
   */
 ISR(USART_RX_vect) {                        
-    uart_isr_receive(&uart0);
+    uart_isr_receive_(&uart0);
 }
 
 /**
@@ -92,17 +96,17 @@ ISR(USART_RX_vect) {
   * Byte transmit complete interrupt routine for UART0, controlled by this driver
   */
 ISR(USART_TX_vect) {           
-    uart_isr_transmit(&uart0);
+    uart_isr_transmit_(&uart0);
 }
 
 #else
 
 void ISR_USART_RX_MOCK(sUARTDriver *uart) {
-    uart_isr_receive(uart);
+    uart_isr_receive_(uart);
 }
 
 void ISR_USART_TX_MOCK(sUARTDriver *uart) {
-    uart_isr_transmit(uart);
+    uart_isr_transmit_(uart);
 }
 
 #endif

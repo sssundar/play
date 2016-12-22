@@ -33,7 +33,7 @@ eStatus __wrap_eventq_enqueue (sEventQueue *queue, const sEvent *event) {
 static uint8_t tx_bytes[sizeof(sData)];
 static uint8_t len_tx_bytes;
 void __wrap_uart_byte_buffer_transmit_ (sUARTDriver *uart, uint8_t byte) {
-    if (len_tx_bytes >= MAX_BUFFERED_BYTES) { return; }
+    if (len_tx_bytes >= sizeof(sData)) { return; }
     tx_bytes[len_tx_bytes] = byte;
     len_tx_bytes += 1;
     ISR_USART_TX_MOCK(uart);
@@ -44,18 +44,18 @@ int main (int argc, char **argv) {
     (void) argc; (void) argv;
     sEventQueue ignored_client;
     sData test_data = {
-        .timestamp = {0};
-        .bytes = {1};
-        .num_bytes = 3;
-        .max_bytes = 3;
-        .type = kdatatype_bmp180_barometry;
-    }
+        .timestamp = {{0}},
+        .bytes = {1,2,3},
+        .num_bytes = 3,
+        .max_bytes = 3,
+        .type = kdatatype_bmp180_barometry
+    };
 
     // Vector 0: Does the UART driver transmit the correct bytes?
     if (!check(ksuccess == uart_init(&uut, &ignored_client))) { return 1; } 
     if (!check(ksuccess == uart_log(&uut, &test_data))) { return 1; }
     bool was_transmission_correct;
-    int k;
+    uint8_t k;
     for (k = 0; k < sizeof(sData); k++) {
         was_transmission_correct = (tx_bytes[k] == *(((void *) test_data) + k));        
         if (!check(was_transmission_correct) { return 1; }

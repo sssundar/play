@@ -42,7 +42,7 @@ test-sample_queue_sw:
 
 test-uart_driver_sw:
 	python config.py gcc > ./inc/config.h
-	gcc $(FLAGS) Wl,--wrap=eventq_enqueue -Wl,--wrap=uart_byte_buffer_receive_ -Wl,--wrap=uart_byte_buffer_transmit_ -g test_uart_driver.c test_helpers.c $(SOURCES) -o test_uart_driver_sw
+	gcc $(FLAGS) -Wl,--wrap=eventq_enqueue -Wl,--wrap=uart_byte_buffer_receive_ -Wl,--wrap=uart_byte_buffer_transmit_ -g test_uart_driver.c test_helpers.c $(SOURCES) -o test_uart_driver_sw
 	./test_uart_driver_sw
 
 clean:		
