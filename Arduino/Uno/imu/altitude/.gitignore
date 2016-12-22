@@ -1,4 +1,5 @@
 inc/config.h
-test_timer_driver
-test_event_queue
-test_sample_queue
+test_timer_driver_sw
+test_event_queue_sw
+test_sample_queue_sw
+test_uart_driver_sw

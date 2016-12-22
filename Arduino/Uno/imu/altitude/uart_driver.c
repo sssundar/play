@@ -64,11 +64,18 @@ static void uart_isr_receive_(sUARTDriver *uart) {
   * Expects sUARTDriver to have been loaded with an sData structure to transmit,
   * and transmits this a byte at a time, incrementing tx_byte_num as it goes.
   * Sets a volatile uint8_t flag's LSB when it's done, an atomic operation.
-  * @param [in] uart an initialized uart object
+  * @param [in] uart an initialized uart object  
   */
 static void uart_isr_transmit_(sUARTDriver *uart) {
-    // TODO Where do we reset the TX_COMPLETE flag? Does the ISR do it for us?
-    // TODO Figure out which byte to send, send it. 
+    if (uart->tx_byte_num >= sizeof(sData)) {
+        uart->is_tx_done = (uint8_t) ktrue;
+        return;
+    }
+    /* This is inefficient on purpose, to help me test by wrapping 
+        the next function call to recursively call the ISR */
+    uint8_t byte_index = uart->tx_byte_num;
+    uart->tx_byte_num += 1; 
+    uart_byte_buffer_transmit_(uart, *(((void *) uart->tx_data) + byte_index));       
 }
 
 #if AVR
@@ -135,7 +142,7 @@ void uart_deinit(sUARTDriver *uart) {
 void uart_log(sUARTDriver* restrict uart, const sData* restrict data) { 
     if ((eStatus) uart->is_tx_done != ktrue) { return kfailure; }
     uart->tx_byte_num = 0;
-    uart->is_tx_done = false;
+    uart->is_tx_done = (uint8_t) kfalse;
     uint8_t* internal_data = (uint8_t *) &(uart->tx_data);
     uint8_t* external_data = (uint8_t *) data;
     uint8_t k = 0;
@@ -143,6 +150,6 @@ void uart_log(sUARTDriver* restrict uart, const sData* restrict data) {
         *(internal_data + k) = *(external_data + k);
     }
     uart_isr_transmit_(uart);
-    while (!(uart->is_tx_done)) { _SLEEP(); }
+    while (!(uart->is_tx_done == (uint8_t) ktrue)) { _SLEEP(); }
     return ksuccess;
 }
