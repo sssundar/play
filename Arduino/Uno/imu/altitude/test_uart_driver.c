@@ -20,7 +20,7 @@ static uint8_t rx_byte_intended;
 eStatus __wrap_uart_byte_buffer_receive_ (sUARTDriver *uart, uint8_t *byte) {
     (void) uart;
     *byte = rx_byte_intended;
-    return 0;
+    return ksuccess;
 }
 
 static uint8_t rx_byte_observed;
@@ -33,7 +33,10 @@ eStatus __wrap_eventq_enqueue (sEventQueue *queue, const sEvent *event) {
 static uint8_t tx_bytes[sizeof(sData)];
 static uint8_t len_tx_bytes;
 void __wrap_uart_byte_buffer_transmit_ (sUARTDriver *uart, uint8_t byte) {
-    if (len_tx_bytes >= sizeof(sData)) { return; }
+    if (len_tx_bytes >= sizeof(sData)) { 
+        printf("Fatal Error\n"); 
+        while (1) { /* loop forever */ } 
+    }
     tx_bytes[len_tx_bytes] = byte;
     len_tx_bytes += 1;
     ISR_USART_TX_MOCK(uart);
