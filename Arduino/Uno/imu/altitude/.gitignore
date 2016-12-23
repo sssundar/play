@@ -1,4 +1,7 @@
 inc/config.h
+*.o
+*.S
+*.elf
 test_timer_driver_sw
 test_event_queue_sw
 test_sample_queue_sw

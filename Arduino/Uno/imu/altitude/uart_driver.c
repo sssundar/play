@@ -81,7 +81,7 @@ eStatus uart_init(sUARTDriver* restrict uart, sEventQueue* restrict to_notify_on
     UCSR0A = TX_COMPLETE;
     UCSR0B = TX_ENABLE | RX_ENABLE | RX_COMPLETE_IE | TX_COMPLETE_IE;
     UCSR0C = USART_PARITY | TXRX_CHAR_SIZE10 | TX_STOP_BITS;
-    BRR0L  = BAUD_BASE_L;
+    UBRR0L  = BAUD_BASE_L;
     UBRR0H = BAUD_BASE_H;
 #endif
     _RELEASE(kinterrupt_restore_flags);

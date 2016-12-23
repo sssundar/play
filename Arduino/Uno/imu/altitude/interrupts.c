@@ -31,12 +31,13 @@ void _RELEASE(eInterruptRequest restore_flags) {
 
 void _ENABLE_SLEEP(void) {
 #if AVR
-    SMCR = 0x01; 
+    sleep_enable(); 
 #endif 
 }
 
 void _SLEEP(void) {
-#if AVR
-    sleep();
+#if AVR    
+    sei();
+    sleep_cpu();
 #endif 
 }

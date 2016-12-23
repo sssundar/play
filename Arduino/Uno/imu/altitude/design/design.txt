@@ -9,7 +9,7 @@ Objects --
 timer_driver        (tested in sw)
 event_queue         (tested in sw)
 sample_queue        (tested in sw)
-uart_driver         
+uart_driver         (tested in sw)
 twi_driver          
 sampler             
 
@@ -71,22 +71,33 @@ uart_driver
     void uart_log(sUARTDriver* restrict uart, const sData* restrict data); 
     
 twi_driver
-    eStatus twi_init(sTWIDriver *self);                                         <-- PROTECTS ITSELF and restores interrupt flags. 
-    void twi_deinit(sTWIDriver *self);                                          <-- PROTECTS ITSELF and restores interrupt flags. 
-    eStatus twi_get(sTWIDriver *self, uint8_t addr, uint8_t reg, uint8_t dest); <-- Not critical. Will not return until the TWI command is complete.
-    eStatus twi_put(sTWIDriver *self, uint8_t addr, uint8_t reg, uint8_t src);  <-- Not critical. Will not return until the TWI command is complete.
+    // @todo Document, Implement
+    // PROTECTS ITSELF and restores interrupt flags. 
+    eStatus twi_init(sTWIDriver *twi);                                         
+    // @todo Document, Implement
+    // PROTECTS ITSELF and restores interrupt flags. 
+    void twi_deinit(sTWIDriver *twi);                                          
+    // @todo Document, Implement
+    // Not critical. Will not return until the TWI command is complete.
+    eStatus twi_get(sTWIDriver* restrict twi, uint8_t addr, uint8_t reg, uint8_t* restrict dest); 
+    // @todo Document, Implement
+    // Not critical. Will not return until the TWI command is complete.
+    eStatus twi_put(sTWIDriver *twi, uint8_t addr, uint8_t reg, uint8_t src);  
 
 sampler
-    eStatus sampler_init(sSampler *self, sEventQueue *e, sSampleQueue *s);      <-- Not critical.
-    void sampler_deinit(sSampler *self);                                        <-- Not critical.
-    eStatus sampler_run(sSampler *self);                                        <-- Not critical. Runs sampler loop. Should never return.
+    eStatus sampler_init(   sSampler* restrict sampler, sTimerDriver* restrict timer, sUARTDriver* restrict uart, 
+                            sEventQueue* restrict inbox, sSampleQueue* restrict outbox);    
+    void sampler_deinit(sSampler *sampler);                                        
+    void sampler_run(sSampler *sampler);                                        
 
 To Do --
 --------
 # Implement and test incrementally. Commit often. 
 # Test on-device a little at a time, making sure interrupts are being called at each stage.
+
 # Try sampling at 200Hz, 25Hz, and 1Hz, and talking to the Barometer/Thermometer. Just raw-dump data on the laptop side.
 # Introduce post-processing on the laptop side
 # Try for a real-time plotting library
+
 # Introduce a logger in non-volatile memory and PySerial commands to dump logs
 # Introduce an assert functionality that the preprocessor can remove with compile time flags
