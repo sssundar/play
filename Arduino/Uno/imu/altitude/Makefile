@@ -1,5 +1,6 @@
 # @file Makefile
 # @details Altitude sampling build script
+# @todo Review http://www.avrfreaks.net/forum/how-optimize-size if code size is problematic.
 # @author Sushant Sundaresh
 # @date 2016-11-30
 
@@ -8,11 +9,21 @@ HEADERS += -I./inc/
 
 FLAGS = 
 FLAGS += -Wall
+FLAGS += -Wundef
 FLAGS += -Werror
 FLAGS += -Wextra
 FLAGS += -std=c99
 FLAGS += -Os
+FLAGS += -fno-inline-small-functions
+FLAGS += -ffunction-sections
+FLAGS += -fdata-sections 
+FLAGS += -fshort-enums
 FLAGS += $(HEADERS)
+
+LINKFLAGS =
+LINKFLAGS += -Wl,-Map=$(TARGET).map,--cref ### WHAT IS THIS??? 
+LINKFLAGS += -Wl,-gc-sections
+LINKFLAGS += -Wl,--relax
 
 SOURCES =
 SOURCES += interrupts.c
@@ -55,8 +66,7 @@ test-uart_driver_sw:
 .PHONY:
 test-timer_hw:
 	python config.py avr > ./inc/config.h	 	
-#	avr-gcc $(FLAGS) -g -mmcu=atmega328p -S -c test_timer_hw.c interrupts.c timer_driver.c event_queue.c  
-	avr-gcc $(FLAGS) -Wno-main -g -mmcu=atmega328p test_timer_hw.c interrupts.c timer_driver.c event_queue.c -o test_timer_hw.elf	
+	avr-gcc $(FLAGS) -Wno-main $(LINKFLAGS) -g -mmcu=atmega328p test_timer_hw.c interrupts.c timer_driver.c event_queue.c -o test_timer_hw.elf	
 
 .PHONY:
 load-timer_hw:
