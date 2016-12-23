@@ -57,8 +57,8 @@ int main (int argc, char **argv) {
     bool was_transmission_correct;
     uint8_t k;
     for (k = 0; k < sizeof(sData); k++) {
-        was_transmission_correct = (tx_bytes[k] == *(((void *) test_data) + k));        
-        if (!check(was_transmission_correct) { return 1; }
+        was_transmission_correct = (tx_bytes[k] == *(((uint8_t *) &test_data) + k));        
+        if (!check(was_transmission_correct)) { return 1; }
     }
     uart_deinit(&uut);
     increment_test_vector();

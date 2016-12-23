@@ -19,6 +19,7 @@ SOURCES += timer_driver.c
 SOURCES += event_queue.c
 SOURCES += data.c
 SOURCES += sample_queue.c
+SOURCES += uart_hal.c
 SOURCES += uart_driver.c
 
 all: clean

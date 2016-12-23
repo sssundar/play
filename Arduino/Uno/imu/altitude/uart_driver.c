@@ -1,49 +1,7 @@
 #include "uart_driver.h"
+#include "uart_hal.h"
 
 /* Local Functions */
-
-/**
-  * @details
-  * UART packets are usually read via the bidirectional register 
-  * URD0. This function, when compiled with AVR = 1, does exactly that.
-  * When compiled for GCC (in silico testing), we allow this function to
-  * be wrapped so that the tester can feed in whatever UART data is required,
-  * then call something like ISR_USART_RX_MOCK. 
-  * @param [in] uart an initialized uart object
-  * @param [in] byte where to store the received byte
-  * @return #kerror: an error occurred during byte rx
-  * @return #ksuccess: a byte was successfully rx'd
-  */
-static eStatus uart_byte_buffer_receive_ (sUARTDriver *uart, uint8_t *byte) {
-    (void) uart;    
-    uint8_t rx_errors = 0;
-#if AVR
-    rx_errors = (UCSR0A & (RX_FRAME_ERROR | DATA_OVERRUN | PARITY_ERROR));
-    *byte = UDR0;
-#else
-    (void) byte;
-#endif
-    return (rx_errors > 0) ? kerror : ksuccess;
-}
-
-/** 
-  * @details
-  * UART packets are usually transmitted by writing the bidirectional register
-  * URD0. This function, when compiled with AVR = 1, does exactly that.
-  * when compiled for GCC (in silico testing), we allow this function to be
-  * wrapped so that the tester can buffer the UART data being transmitted,
-  * to compare against what they expected.
-  * @param [in] uart an initialized uart object
-  * @param [in] byte the data to transmit  
-  */
-static void uart_byte_buffer_transmit_ (sUARTDriver *uart, uint8_t byte) {
-    (void) uart;
-#if AVR
-    UDR0 = byte;
-#else
-    (void) byte;
-#endif
-}
 
 /** 
   * @details 
@@ -75,11 +33,11 @@ static void uart_isr_transmit_(sUARTDriver *uart) {
         uart->is_tx_done = (uint8_t) ktrue;
         return;
     }
-    /* This is inefficient on purpose, to help me test by wrapping 
+    /* I've done this on purpose, to help me test by wrapping 
         the next function call to recursively call the ISR */
     uint8_t byte_index = uart->tx_byte_num;
     uart->tx_byte_num += 1; 
-    uart_byte_buffer_transmit_(uart, *(((void *) uart->tx_data) + byte_index));       
+    uart_byte_buffer_transmit_(uart, *(((uint8_t *) &(uart->tx_data)) + byte_index));       
 }
 
 #if AVR
@@ -143,7 +101,7 @@ void uart_deinit(sUARTDriver *uart) {
     _RELEASE(kinterrupt_restore_flags);
 }
 
-void uart_log(sUARTDriver* restrict uart, const sData* restrict data) { 
+eStatus uart_log(sUARTDriver* restrict uart, const sData* restrict data) { 
     if ((eStatus) uart->is_tx_done != ktrue) { return kfailure; }
     uart->tx_byte_num = 0;
     uart->is_tx_done = (uint8_t) kfalse;
