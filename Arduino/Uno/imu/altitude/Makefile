@@ -21,7 +21,7 @@ FLAGS += -fshort-enums
 FLAGS += $(HEADERS)
 
 LINKFLAGS =
-LINKFLAGS += -Wl,-Map=$(TARGET).map,--cref ### WHAT IS THIS??? 
+#LINKFLAGS += -Wl,-Map=$(TARGET).map,--cref ### WHAT IS THIS??? 
 LINKFLAGS += -Wl,-gc-sections
 LINKFLAGS += -Wl,--relax
 
