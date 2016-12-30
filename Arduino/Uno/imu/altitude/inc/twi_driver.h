@@ -21,8 +21,12 @@ typedef struct sTWIDriver {
 	char state[4];
 } sTWIDriver;
 
-// @todo Document, Implement
-// PROTECTS ITSELF and restores interrupt flags. 
+// @details
+// Protects itself from interrupts but restores interrupt flags on return.
+// Resets TWI peripheral and state variables related to the TWI tx/rx FSM. 
+// @param [in] twi a TWI driver object, uninitialized
+// @return #ksuccess: successfully initialized TWI peripheral
+// @return #kerror: if twi is null
 eStatus twi_init(sTWIDriver *twi);                                         
 // @todo Document, Implement
 // PROTECTS ITSELF and restores interrupt flags. 

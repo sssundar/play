@@ -11,6 +11,7 @@ event_queue         (tested in sw)
 sample_queue        (tested in sw)
 uart_driver         (tested in sw)
 twi_driver          
+bmp180_driver       
 sampler             
 
 Uno Main Flow --
@@ -19,6 +20,7 @@ A sample queue object is initialized
 An event queue object is initialized
 An sampler object is initialized with its sample and event queues
 A TWI driver object is initialized
+A BMP180 driver object is initialized
 A timer driver object is initialized
 A UART uart driver object is initialized
 The sampler object's run method is called.
@@ -27,12 +29,13 @@ die();
 PySerial Main Flow --
 ---------------------
 Send a config signal
-Read and store the configuration
-Send a start signal 
-Log data for 10 seconds
+Soft reset the BMP180 chip
+Read and transmit the BMP180 configuration
+Send a start signal
+Log data for <user-specified> seconds
+Plot the data, updating every second
 Send an end signal
 Save the data to file with a user-specified filename
-Plot the data
 
 Observing Errors --
 -------------------
@@ -72,24 +75,45 @@ uart_driver
     void uart_log(sUARTDriver* restrict uart, const sData* restrict data); 
     
 twi_driver
-    // @todo Document, Implement
-    // PROTECTS ITSELF and restores interrupt flags. 
     eStatus twi_init(sTWIDriver *twi);                                         
-    // @todo Document, Implement
-    // PROTECTS ITSELF and restores interrupt flags. 
     void twi_deinit(sTWIDriver *twi);                                          
-    // @todo Document, Implement
-    // Not critical. Will not return until the TWI command is complete.
     eStatus twi_get(sTWIDriver* restrict twi, uint8_t addr, uint8_t reg, uint8_t* restrict dest); 
-    // @todo Document, Implement
-    // Not critical. Will not return until the TWI command is complete.
     eStatus twi_put(sTWIDriver *twi, uint8_t addr, uint8_t reg, uint8_t src);  
 
-sampler
-    eStatus sampler_init(   sSampler* restrict sampler, sTimerDriver* restrict timer, sUARTDriver* restrict uart, 
-                            sEventQueue* restrict inbox, sSampleQueue* restrict outbox);    
-    void sampler_deinit(sSampler *sampler);                                        
-    void sampler_run(sSampler *sampler);                                        
+bmp180_driver    
+    // Sets up internal pressure/temperature sample timer tick counters, etc.
+    // The configuration contains oversampling rates for pressure, which determines what tick counters are reset to.
+    // Also contains things like.. BMP180 I2C address on the Adafruit breakout board, register start addresses for calibration, ...
+    eStatus bmp180_init(sBMP180Driver* restrict barometer, const sBMP180Configuration* restrict config);
+    
+    // Soft-resets BMP 180 
+    eStatus bmp180_reset(sBMP180Driver* restrict barometer, sTWIDriver* restrict twi)
+    
+    // Blocking, transmits calibration via UART as sData with bytes MSB, MiSB = data, and LSB = 'which parameter' as documented
+    eStatus bmp180_get_calibration(sBMP180Driver* restrict barometer, sTWIDriver* restrict twi, sUARTDriver* restrict uart);
+    
+    // Starts pressure sampling via a TWI transmission and resets pressure sampling time counter
+    eStatus bmp180_start_pressure_sampling(sBMP180Driver* restrict barometer, sTWIDriver* restrict twi, ... (configuration) );
+    
+    // Checks timer to see whether pressure data should be ready, and checks TWI if it is time.
+    eStatus bmp180_is_pressure_ready(sBMP180Driver* restrict barometer, sTimerDriver* restrict timer, sTWIDriver* restrict twi);
+    
+    // Gets the pressure data and stores it in the sData structure provided
+    eStatus bmp180_get_pressure_data(sBMP180Driver* restrict barometer, sTWIDriver* restrict twi, sData* restrict data);
+    
+    // Same as above.
+    eStatus bmp180_start_temperature_sampling(sBMP180Driver* restrict barometer, sTWIDriver* restrict twi);
+    
+    // Checks timer to see whether temperature data should be ready, and if it should be, checks TWI
+    eStatus bmp180_is_temperature_ready(sBMP180Driver* restrict barometer, sTimerDriver* restrict timer, sTWIDriver* restrict twi);
+    
+    eStatus bmp180_get_temperature_data(sBMP180Driver* restrict barometer, sTWIDriver* restrict twi, sData* restrict data);
+
+altitude_sampler
+    eStatus altitude_sampler_init(  sAltitudeSampler* restrict sampler, sTimerDriver* restrict timer, sUARTDriver* restrict uart, 
+                                    sTWIDriver* restrict twi, sBMP180Driver* restrict barometer, sEventQueue* restrict inbox);    
+    void altitude_sampler_deinit(sAltitudeSampler *sampler);                                        
+    void altitude_sampler_run(sAltitudeSampler *sampler);                                        
 
 To Do --
 --------
@@ -101,5 +125,19 @@ To Do --
 # Introduce post-processing on the laptop side
 # Try for a real-time plotting library
 
+To Do, Next Iteration --
+------------------------
+# Look into sample jitter and consider making UART transmissions non-blocking, pumped and left alone, instead of waited on.
+# Might want to revise design so everything is callback/event queue based. So then TWI isn't blocking either, we just
+   pass in when we call drivers that use TWI a master callback that sends a specific event... e.g. bmp180_start_sampling(*callback) -> twi_put(*callback)
+   which then means the sampler is just an event-driven FSM
+   In this case TWI driver, UART driver, etc. need event queues of their own. We should probably have a sample queue 
+   be able to give us a pointer to a buffer index and treat that index as 'used' and block on it if it isn't marked valid or
+   something like that, so that's not a blocking or space-wasting operation either.
+# Should speed UART up a lot.. 7.5 ms for a 9 byte transfer is ridiculous. The only reason the timing works now is because you are 
+   sampling so little concurrently.
+
+Nice to Haves --
+----------------
 # Introduce a logger in non-volatile memory and PySerial commands to dump logs
 # Introduce an assert functionality that the preprocessor can remove with compile time flags
