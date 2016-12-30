@@ -36,11 +36,12 @@ Plot the data
 
 Observing Errors --
 -------------------
-void die (void) { 
+void die (uint8_t callerid) { 
     disable interrupts
     deinitialize everything
     while (1) {
-        flash a light at 1 Hz;
+        flash a light at 1 Hz off D6
+        send a uart transmission with the caller id
     }
 }
 
@@ -94,6 +95,7 @@ To Do --
 --------
 # Implement and test incrementally. Commit often. 
 # Test on-device a little at a time, making sure interrupts are being called at each stage.
+    # Timer, Event/Sample Queue, UART drivers all coexist nicely. Onto TWI!
 
 # Try sampling at 200Hz, 25Hz, and 1Hz, and talking to the Barometer/Thermometer. Just raw-dump data on the laptop side.
 # Introduce post-processing on the laptop side

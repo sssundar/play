@@ -21,7 +21,6 @@ FLAGS += -fshort-enums
 FLAGS += $(HEADERS)
 
 LINKFLAGS =
-#LINKFLAGS += -Wl,-Map=$(TARGET).map,--cref ### WHAT IS THIS??? 
 LINKFLAGS += -Wl,-gc-sections
 LINKFLAGS += -Wl,--relax
 
@@ -67,10 +66,14 @@ test-uart_driver_sw:
 test-timer_hw:
 	python config.py avr > ./inc/config.h	 	
 	avr-gcc $(FLAGS) -Wno-main $(LINKFLAGS) -g -mmcu=atmega328p test_timer_hw.c interrupts.c timer_driver.c event_queue.c -o test_timer_hw.elf	
+	avrdude -c arduino -p m328p -P /dev/ttyACM0 -U flash:w:test_timer_hw.elf
 
 .PHONY:
-load-timer_hw:
-	avrdude -c arduino -p m328p -P /dev/ttyACM0 -U flash:w:test_timer_hw.elf
+test-uart_hw:
+	python config.py avr > ./inc/config.h	 	
+	avr-gcc $(FLAGS) -Wno-main $(LINKFLAGS) -g -mmcu=atmega328p test_uart_hw.c interrupts.c timer_driver.c uart_hal.c uart_driver.c event_queue.c data.c -o test_uart_hw.elf	
+	avrdude -c arduino -p m328p -P /dev/ttyACM0 -U flash:w:test_uart_hw.elf	
+	python test_uart_hw.py 	
 
 .PHONY:
 clean:		
