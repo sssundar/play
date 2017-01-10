@@ -21,10 +21,12 @@
   *  the test is a success and a UART transmission to that effect will be sent.
   */    
 
+#include <avr/io.h>
 #include "twi_driver.h"
 #include "uart_driver.h"
 #include "event_queue.h"
 #include "data.h"
+#include "test_helpers_hw.h"
 
 #define HZ_1 200
 #define BMP180_SLA 0xEE // = 0x77 (7-bit notation) << 1 = 0b01110111 << 1 = 0b11101110 = 0xEE
@@ -37,6 +39,7 @@ sEventQueue inbox;
 
 void die_ (uint8_t caller_id, sData *data) {
     data->timestamp.count[0] = caller_id; 
+    data->timestamp.count[1] = TWSR;
     uart_log(&uart0, data);
     while (1) { _SLEEP(); } 
 }
@@ -72,18 +75,17 @@ void main(void) {
     uint8_t tx_data = BMP180_AC1;
     uint8_t rx_data[2] = {0};
 
-    if (ksuccess != twi_tx_start(&twi, 0))                  { die_(1,&data); }
-    if (ksuccess != twi_tx_sla(&twi, BMP180_SLA, 1))        { die_(2,&data); }
-    if (ksuccess != twi_tx_data(&twi, &tx_data, 1, kfalse)) { die_(3,&data); }    
-    if (ksuccess != twi_tx_start(&twi, 1))                  { die_(4,&data); }    
-    if (ksuccess != twi_tx_sla(&twi, BMP180_SLA, 0))        { die_(5,&data); }
-    if (ksuccess != twi_rx_data(&twi, (uint8_t *) &rx_data, 2))         { die_(6,&data); }
+    if (ksuccess != twi_tx_start(&twi, 0))                      { die_(1,&data); }
+    if (ksuccess != twi_tx_sla(&twi, BMP180_SLA, 1))            { die_(2,&data); }    
+    if (ksuccess != twi_tx_data(&twi, &tx_data, 1, kfalse))     { die_(3,&data); }    
+    if (ksuccess != twi_tx_start(&twi, 1))                      { die_(4,&data); }    
+    if (ksuccess != twi_tx_sla(&twi, BMP180_SLA, 0))            { die_(5,&data); }
+    if (ksuccess != twi_rx_data(&twi, (uint8_t *) &rx_data, 2)) { die_(6,&data); }
     
     data_add_byte(&data, rx_data[0]);
     data_add_byte(&data, rx_data[1]);
     data_add_byte(&data, BMP180_AC1);    
     uart_log(&uart0, &data);
-
     while (1) { _SLEEP(); } 
 }
 

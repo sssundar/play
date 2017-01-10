@@ -5,7 +5,13 @@
   * @details 
   * The hardware abstraction layer for the TWI module of the ATMEGA328p processor.
   * Relies on register LD/ST addresses defined in io328p.h (imported in io.h)
-  * You MUST enable sleep (_ENABLE_SLEEP()) if you want to use this driver.
+  * @todo 
+  * Fix busy waits on TWI bus events. In principle this should be done using
+  *  SLEEP_ and interrupt handling. However, this appears to require implementing
+  *  the entire state machine logic for TWI in the interrupt context, as leaving
+  *  TWINT high and returning from an interrupt context with TWIE set
+  *  immediately seems to trigger another interrupt! As the goal is to study the 
+  *  sensor output, and this TWI design is blocking anyways, we'll let it be for now.
   */
 
 #ifndef _TWI_DRIVER_H_
@@ -14,7 +20,6 @@
 #include "config.h"
 #include "stdmath.h"
 #include "types.h"
-#include "interrupts.h"
 #include "io.h"
 
 /* Begin Two Wire Interface Register Bit Masks */
@@ -22,14 +27,14 @@
 /* TWBR, TWDR are defined in io.h */
 
 /* TWCR - TWI Control Register */
-#define TWCR_TWINT  0x40    // Write 1 to release SCL line after processing an event
-#define TWCR_TWEA   0x30    // Sends Acknowledge Bit, can just set this to 1 in master tx/rx mode
+#define TWCR_TWINT  0x80    // Write 1 to release SCL line after processing an event
+#define TWCR_TWEA   0x40    // Sends Acknowledge Bit, can just set this to 1 in master tx/rx mode
 #define TWCR_TWSTA  0x20    // Sends Start Bit, must be cleared
 #define TWCR_TWSTO  0x10    // Sends a Stop bit, auto-cleared
 #define TWCR_TWWC   0x08    // Can probably ignore unless there are bus errors
 #define TWCR_TWEN   0x04    // Enables TWI peripheral
 #define TWCR_TWIE   0x01    // Interrupt enable
-#define TWCR_BASE   (TWCR_TWINT | TWCR_TWEN | TWCR_TWIE)
+#define TWCR_BASE   (TWCR_TWINT | TWCR_TWEN)
 
 /* TWSR - TWI Status Register */
 #define TWSR_PRESCALER  0x03 // Prescaler bits, set to 0 for prescale factor of 1
@@ -50,8 +55,7 @@
 
 // @details
 // TWI driver object that really just stores status codes from the last TWI action
-typedef struct sTWIDriver {    
-    uint8_t is_busy;
+typedef struct sTWIDriver {        
     uint8_t status;
 } sTWIDriver;
 
@@ -62,7 +66,6 @@ extern sTWIDriver twi;
 #endif 
 
 // @details
-// Protects itself from interrupts but restores interrupt flags on return.
 // Sets up TWI peripheral in master transmitter/receiver mode. 
 // Sets TWBR to 0 to have a 1 MHz TWI base clock
 // Resets state variables related to the TWI tx/rx FSM. 
@@ -72,13 +75,12 @@ extern sTWIDriver twi;
 eStatus twi_init(sTWIDriver *twi);                                         
 
 // @details
-// Protects itself from interrupts but restores interrupt flags on return.
 // Just clear the TWINT bit and disable TWI enable bit in the TWCR
 // @param [in] twi a TWI driver object
 void twi_deinit(sTWIDriver *twi);                                          
 
 // @details
-// Sets up the TWI start signal and waits for the interrupt indicating this 
+// Sets up the TWI start signal and busy waits for the flag indicating this 
 // has been sent. Gets the status code.
 // @param [in] twi a TWI driver object
 // @param [in] is_repeated is this a repeated start
@@ -87,7 +89,7 @@ void twi_deinit(sTWIDriver *twi);
 eStatus twi_tx_start (sTWIDriver *twi, uint8_t is_repeated);
 
 // @details
-// Sets up the TWI SLA(W/R) signal and waits for the interrupt indicating this 
+// Sets up the TWI SLA(W/R) signal and busy waits for the flag indicating this 
 // has been sent. Gets the status code.
 // @param [in] twi a TWI driver object
 // @param [in] addr TWI bus address
@@ -97,7 +99,7 @@ eStatus twi_tx_start (sTWIDriver *twi, uint8_t is_repeated);
 eStatus twi_tx_sla (sTWIDriver *twi, uint8_t addr, uint8_t is_write);
 
 // @details
-// Sets up the TWDR and sends the data. Waits for the interrupt indicating this 
+// Sets up the TWDR and sends the data. Busy waits for the flag indicating this 
 // has been sent. Gets the status code, and repeats till it's out of bytes to send.
 // Then, transmits the stop condition and releases the bus.
 // @param [in] twi a TWI driver object

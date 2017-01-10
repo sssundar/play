@@ -23,4 +23,5 @@ if __name__ == "__main__":
 						
 		data = [struct.unpack('B',x)[0] for x in uno.read(size=NUM_BYTES_PER_SAMPLE)]			
 		print data
+
 		sys.exit(0)			
