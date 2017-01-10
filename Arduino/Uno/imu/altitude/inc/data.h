@@ -23,8 +23,8 @@ typedef enum eDataType {
 } eDataType;
 
 /* Byte width of supported data types */
-#define BYTEWIDTH_BMP180_CALIBRATION    2 // Transmitted as follows: MSB calibration byte | EEPROM address | 0x00 LSB, 
-                                          // where the calibration byte is guaranteed not to be 0xFF or 0x00
+#define BYTEWIDTH_BMP180_CALIBRATION    3 // Transmitted as follows: MSB parameter-MSB | parameter-LSB | EEPROM address LSB, 
+                                          // where the calibration bytes are guaranteed not to be 0xFF or 0x00
 #define BYTEWIDTH_BMP180_BAROMETRY      3
 #define BYTEWIDTH_BMP180_THERMOMETRY    2
 #define MAX_DATA_BYTES                  3 

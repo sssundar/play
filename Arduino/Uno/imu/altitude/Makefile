@@ -76,6 +76,13 @@ test-uart_hw:
 	python test_uart_hw.py 	
 
 .PHONY:
+test-twi_hw:
+	python config.py avr > ./inc/config.h	 	
+	avr-gcc $(FLAGS) -Wno-main $(LINKFLAGS) -g -mmcu=atmega328p test_twi_hw.c interrupts.c twi_driver.c uart_hal.c uart_driver.c event_queue.c data.c -o test_twi_hw.elf	
+	#avrdude -c arduino -p m328p -P /dev/ttyACM0 -U flash:w:test_twi_hw.elf	
+	#python test_twi_hw.py 	
+
+.PHONY:
 clean:		
 	rm -f ./inc/config.h
 	rm -f ./test_timer_driver_sw	

@@ -103,9 +103,10 @@ eStatus twi_tx_sla (sTWIDriver *twi, uint8_t addr, uint8_t is_write);
 // @param [in] twi a TWI driver object
 // @param [in] data bytes to transmit
 // @param [in] num_bytes number of bytes to transmit
+// @param [in] stop_after_tx if ktrue, then a stop condition will be transmitted after the tx is complete
 // @return #ksuccess on success
 // @return #kerror otherwise
-eStatus twi_tx_data (sTWIDriver* restrict twi, const uint8_t* restrict data, uint8_t num_bytes);
+eStatus twi_tx_data (sTWIDriver* restrict twi, const uint8_t* restrict data, uint8_t num_bytes, eStatus stop_after_tx);
 
 // @details
 // Receives num_bytes bytes then releases the bus.

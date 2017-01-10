@@ -66,7 +66,7 @@ eStatus twi_tx_sla (sTWIDriver *twi, uint8_t addr, uint8_t is_write) {
     if (twi == NULL) { return kerror; }    
     _PROTECT(kinterrupt_save_flags);   
 #if AVR
-    TWDR = addr | is_write;
+    TWDR = (addr | 0x01) & ~is_write;
     TWCR = TWCR_BASE;
 #endif
     twi->is_busy = 1;
@@ -76,23 +76,68 @@ eStatus twi_tx_sla (sTWIDriver *twi, uint8_t addr, uint8_t is_write) {
     return (twi->status == expected_status) ? ksuccess : kerror;
 }
 
-eStatus twi_tx_data (sTWIDriver* restrict twi, const uint8_t* restrict data, uint8_t num_bytes) {
+eStatus twi_tx_data (sTWIDriver* restrict twi, const uint8_t* restrict data, uint8_t num_bytes, eStatus stop_after_tx) {
     if (twi == NULL) { return kerror; }    
+    if ((data == NULL) && (num_bytes > 0)) { return kerror; }
+    if (num_bytes == 0) {         
+        // Do not need to protect this against TWI interrupts since we know the bus won't be busy afterward.
+        TWCR = TWCR_TWSTO | TWCR_BASE;
+        return ksuccess;
+    }    
     uint8_t k = 0;
-    uint8_t expected_status;
-    _PROTECT(kinterrupt_save_flags);   
-#if AVR
-    TWDR = *data;
-    I ACTUALLY NEED A HAL FOR THIS AS WELL IF I WANT TO TEST IT
-#endif
-    _RELEASE(kinterrupt_restore_flags);                    
+    uint8_t expected_status = MASTER_TX_DATA_ACKD;    
     for (k = 0; k < num_bytes; k++) {
-        _PROTECT(kinterrupt_save_flags);   
+        _PROTECT(kinterrupt_save_flags);       
+#if AVR
+        TWDR = *(data+k);
+        TWCR = TWCR_BASE;
+#endif        
+        twi->is_busy = 1;
         _RELEASE(kinterrupt_restore_flags);                    
+        while (twi->is_busy) { _SLEEP(); }
+        if (twi->status != expected_status) {            
+            return kerror;
+        } 
+    }
+    if (stop_after_tx == ktrue) {
+        TWCR = TWCR_TWSTO | TWCR_BASE;
     }
     return ksuccess;
 }
 
 eStatus twi_rx_data (sTWIDriver* restrict twi, uint8_t* restrict data, uint8_t num_bytes) {
-
+    if (twi == NULL) { return kerror; }    
+    if ((data == NULL) && (num_bytes > 0)) { return kerror; }
+    if (num_bytes == 0) {         
+        // Do not need to protect this against TWI interrupts since we know the bus won't be busy afterward.
+        TWCR = TWCR_TWSTO | TWCR_BASE;
+        return ksuccess;
+    }    
+    uint8_t k = 0;
+    uint8_t expected_status = MASTER_RX_DATA_ACKD;    
+    for (k = 0; k < (num_bytes-1); k++) {
+        _PROTECT(kinterrupt_save_flags);       
+#if AVR        
+        TWCR = TWCR_TWEA | TWCR_BASE;        
+#endif        
+        twi->is_busy = 1;
+        _RELEASE(kinterrupt_restore_flags);                    
+        while (twi->is_busy) { _SLEEP(); }
+        if (twi->status != expected_status) {            
+            return kerror;
+        } 
+        *(data+k) = TWDR;                    
+    }
+    expected_status = MASTER_RX_DATA_NACKD;    
+    _PROTECT(kinterrupt_save_flags);       
+    TWCR = TWCR_BASE;    
+    twi->is_busy = 1;    
+    _RELEASE(kinterrupt_restore_flags);                    
+    while (twi->is_busy) { _SLEEP(); }
+    if (twi->status != expected_status) {            
+        return kerror;
+    } 
+    *(data+k) = TWDR;                                
+    TWCR = TWCR_TWSTO | TWCR_BASE;
+    return ksuccess;
 }
