@@ -67,7 +67,7 @@ extern sTWIDriver twi;
 
 // @details
 // Sets up TWI peripheral in master transmitter/receiver mode. 
-// Sets TWBR to 0 to have a 1 MHz TWI base clock
+// Sets TWBR to 0 to have a 100 kHz TWI base clock
 // Resets state variables related to the TWI tx/rx FSM. 
 // @param [in] twi a TWI driver object, uninitialized
 // @return #ksuccess: successfully initialized TWI peripheral
@@ -93,10 +93,10 @@ eStatus twi_tx_start (sTWIDriver *twi, uint8_t is_repeated);
 // has been sent. Gets the status code.
 // @param [in] twi a TWI driver object
 // @param [in] addr TWI bus address
-// @param [in] is_write is this a write (not a read)
+// @param [in] is_read is this a read (not a write)
 // @return #ksuccess on success
 // @return #kerror otherwise
-eStatus twi_tx_sla (sTWIDriver *twi, uint8_t addr, uint8_t is_write);
+eStatus twi_tx_sla (sTWIDriver *twi, uint8_t addr, uint8_t is_read);
 
 // @details
 // Sets up the TWDR and sends the data. Busy waits for the flag indicating this 

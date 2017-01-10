@@ -19,6 +19,11 @@
   *  If all TWI interrupts pass with valid statuses, and we retrieve data 
   *  that is different between the MSB and LSB and is not 0x00 of 0xFF,
   *  the test is a success and a UART transmission to that effect will be sent.
+  * @aside
+  * Passed on 2017-01-10 after switching from interrupt-sleeping to busy-waiting,
+  * and slowing the TWI clock to 100kHz from 1MHz. The first of these changes
+  * was not necessary; it was just expedient given the lack of an ISR friendly TWI FSM 
+  * in my current "drive it yourself" design.
   */    
 
 #include <avr/io.h>
@@ -76,12 +81,15 @@ void main(void) {
     uint8_t rx_data[2] = {0};
 
     if (ksuccess != twi_tx_start(&twi, 0))                      { die_(1,&data); }
-    if (ksuccess != twi_tx_sla(&twi, BMP180_SLA, 1))            { die_(2,&data); }    
+    if (ksuccess != twi_tx_sla(&twi, BMP180_SLA, 0))            { die_(2,&data); }    
     if (ksuccess != twi_tx_data(&twi, &tx_data, 1, kfalse))     { die_(3,&data); }    
     if (ksuccess != twi_tx_start(&twi, 1))                      { die_(4,&data); }    
-    if (ksuccess != twi_tx_sla(&twi, BMP180_SLA, 0))            { die_(5,&data); }
+    if (ksuccess != twi_tx_sla(&twi, BMP180_SLA, 1))            { die_(5,&data); }
     if (ksuccess != twi_rx_data(&twi, (uint8_t *) &rx_data, 2)) { die_(6,&data); }
     
+    if ((rx_data[0] == 0x00) || (rx_data[0] == 0xFF))           { die_(7,&data); }
+    if ((rx_data[1] == 0x00) || (rx_data[1] == 0xFF))           { die_(8,&data); }
+
     data_add_byte(&data, rx_data[0]);
     data_add_byte(&data, rx_data[1]);
     data_add_byte(&data, BMP180_AC1);    
