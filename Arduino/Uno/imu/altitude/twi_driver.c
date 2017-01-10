@@ -39,7 +39,7 @@ eStatus twi_init(sTWIDriver *twi) {
 }
 
 void twi_deinit(sTWIDriver *twi) {
-    if (twi == NULL) { return kerror; }
+    if (twi == NULL) { return; }
     _PROTECT(kinterrupt_save_flags);     
     twi->is_busy = 0;
     twi->status = 0;    

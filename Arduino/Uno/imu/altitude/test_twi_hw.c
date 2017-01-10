@@ -29,7 +29,7 @@
 #define HZ_1 200
 #define BMP180_SLA 0xEE // = 0x77 (7-bit notation) << 1 = 0b01110111 << 1 = 0b11101110 = 0xEE
 #define BMP180_AC1 0xAA 
-#define START_TEST = 's'
+#define START_TEST 's'
 
 sTWIDriver twi;
 sUARTDriver uart0;
@@ -37,7 +37,7 @@ sEventQueue inbox;
 
 void die_ (uint8_t caller_id, sData *data) {
     data->timestamp.count[0] = caller_id; 
-    uart_log(&uart0, &data);
+    uart_log(&uart0, data);
     while (1) { _SLEEP(); } 
 }
 
@@ -77,13 +77,13 @@ void main(void) {
     if (ksuccess != twi_tx_data(&twi, &tx_data, 1, kfalse)) { die_(3,&data); }    
     if (ksuccess != twi_tx_start(&twi, 1))                  { die_(4,&data); }    
     if (ksuccess != twi_tx_sla(&twi, BMP180_SLA, 0))        { die_(5,&data); }
-    if (ksuccess != twi_rx_data(&twi, &rx_data, 2))         { die_(6,&data); }
+    if (ksuccess != twi_rx_data(&twi, (uint8_t *) &rx_data, 2))         { die_(6,&data); }
     
     data_add_byte(&data, rx_data[0]);
     data_add_byte(&data, rx_data[1]);
     data_add_byte(&data, BMP180_AC1);    
     uart_log(&uart0, &data);
-    
+
     while (1) { _SLEEP(); } 
 }
 
