@@ -79,13 +79,15 @@ eStatus bmp180_is_pressure_ready(sBMP180Driver* restrict barometer,
                                 sTWIDriver* restrict twi);
 
 // @details
-// Gets the pressure data and stores it in the sData structure provided
+// Gets the pressure data and stores it, timestamped at the moment of retrieval, in the sData structure provided
 // @param [in] barometer a bmp180 driver object
 // @param [in] twi a twi driver object
+// @param [in] timer a timer driver object
 // @param [in] data where to save the pressure data
 // @return #kerror: unsuccessful
 // @return #ksuccess: otherwise
 eStatus bmp180_get_pressure_data(sBMP180Driver* restrict barometer, 
+                                sTimerDriver* restrict timer,
                                 sTWIDriver* restrict twi, 
                                 sData* restrict data);
 
@@ -110,11 +112,13 @@ eStatus bmp180_is_temperature_ready(sBMP180Driver* restrict barometer,
                                     sTWIDriver* restrict twi);
 
 // @details
-// Gets the temperature data and stores it in the sData structure provided
+// Gets the temperature data and stores it, timestamped at the moment of retrieval, in the sData structure provided
 // @param [in] barometer a bmp180 driver object
+// @param [in] timer a timer driver object
 // @param [in] twi a twi driver object
 // @param [in] data where to save the temperature data
 eStatus bmp180_get_temperature_data(sBMP180Driver* restrict barometer, 
+                                    sTimerDriver* restrict timer,
                                     sTWIDriver* restrict twi, 
                                     sData* restrict data);
 

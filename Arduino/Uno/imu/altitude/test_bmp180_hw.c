@@ -43,6 +43,7 @@ void main(void) {
         .max_bytes = 1,
         .type = kdatatype_unset
     };    
+    sData measurement; 
 
     _ENABLE_SLEEP();    
     twi_init(&twi);        
@@ -64,12 +65,21 @@ void main(void) {
             }            
         }
 
-        if ((event.type == kevent_timer) && (event.data == HZ_1)) {
-            // Set up a temperature sample and a pressure sample
+        if ((event.type == kevent_timer) && (event.data == HZ_1)) {            
+            bmp180_start_temperature_sampling(&barometer, &twi))
+            bmp180_start_pressure_sampling(&barometer, &twi))
         }
 
-        if ((event.type == kevent_timer) && (event.data == HZ_200)) {
-            // Figure out which samples are ready, and then grab them and send them off
+        if ((event.type == kevent_timer) && (event.data == HZ_200)) {            
+            if (ktrue == bmp180_is_temperature_ready(&barometer, &timer0, &twi)) {                
+                bmp180_get_temperature_data(&barometer, &timer0, &twi, &measurement);
+                uart_log(&uart0, &measurement);
+            }
+            
+            if (ktrue == bmp180_is_pressure_ready(&barometer, &timer0, &twi)) {
+                bmp180_get_pressure_data(&barometer, &timer0, &twi, &measurement);
+                uart_log(&uart0, &measurement);                
+            }            
         }
     }
     

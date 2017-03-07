@@ -53,6 +53,7 @@ eStatus bmp180_is_pressure_ready(sBMP180Driver* restrict barometer,
 }
 
 eStatus bmp180_get_pressure_data(sBMP180Driver* restrict barometer, 
+                                sTimerDriver* restrict timer,
                                 sTWIDriver* restrict twi, 
                                 sData* restrict data) {
     (void) barometer; 
@@ -78,6 +79,7 @@ eStatus bmp180_is_temperature_ready(sBMP180Driver* restrict barometer,
 }
 
 eStatus bmp180_get_temperature_data(sBMP180Driver* restrict barometer, 
+                                    sTimerDriver* restrict timer,
                                     sTWIDriver* restrict twi, 
                                     sData* restrict data) {
     (void) barometer; 
