@@ -46,9 +46,7 @@ static eStatus bmp180_start_sampling_(sBMP180Driver*restrict barometer,
     uint8_t control_register_address = BMP180_CTRL_REGISTER;    
     if (ksuccess != twi_tx_start(twi, 0))                                   { return kerror; }
     if (ksuccess != twi_tx_sla(twi, barometer->twi_address, 0))             { return kerror; }    
-    if (ksuccess != twi_tx_data(twi, &control_register_address, 1, kfalse)) { return kerror; }    
-    if (ksuccess != twi_tx_start(twi, 1))                                   { return kerror; }    
-    if (ksuccess != twi_tx_sla(twi, barometer->twi_address, 0))             { return kerror; }
+    if (ksuccess != twi_tx_data(twi, &control_register_address, 1, kfalse)) { return kerror; }            
     if (ksuccess != twi_tx_data(twi, &control_register_value, 1, ktrue))    { return kerror; }
     barometer->remaining_200Hz_ticks_till_temperature_is_ready = remaining_200Hz_ticks_till_sample_is_ready; 
     barometer->is_sampling = ktrue;    

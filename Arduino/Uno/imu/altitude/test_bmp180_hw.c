@@ -17,13 +17,14 @@
 #include "test_helpers_hw.h"
 
 #define HZ_1 200
+#define HZ_10 20
 #define HZ_200 1
 #define START_TEST 's'
 
 sTWIDriver twi;
 sUARTDriver uart0;
 sTimerDriver timer0;
-sTimerClient clients[2];
+sTimerClient clients[3];
 sBMP180Driver barometer;
 sEventQueue inbox;
 
@@ -55,9 +56,13 @@ void main(void) {
     twi_init(&twi);        
     eventq_init(&inbox);    
     uart_init(&uart0, &inbox);       
-    timer_init(&timer0, (sTimerClient *) clients, 2);    
+    timer_init(&timer0, (sTimerClient *) clients, 3);    
     bmp180_init(&barometer); 
     
+    eStatus have_sampled_temperature_this_second = kfalse;
+    eStatus am_currently_sampling_temperature = kfalse;
+    eStatus am_currently_sampling_pressure = kfalse;
+
     while (1) {
         while (ksuccess != eventq_dequeue(&inbox, &event)) {
             _SLEEP();
@@ -67,19 +72,44 @@ void main(void) {
             if (event.data == START_TEST) {
                 bmp180_get_calibration(&barometer, &twi, &uart0, &timer0);
                 timer_register(&timer0, &inbox, HZ_200);  
-                timer_register(&timer0, &inbox, HZ_1);      
+                timer_register(&timer0, &inbox, HZ_10);      
+                timer_register(&timer0, &inbox, HZ_1);  
             }            
         }
 
-        if ((event.type == kevent_timer) && (event.data == HZ_1)) {                                                               
-            if (ksuccess != bmp180_start_pressure_sampling(&barometer, &twi)) { die_(1, &assert_log); }
+        if ((event.type == kevent_timer) && (event.data == HZ_1)) {
+            have_sampled_temperature_this_second = kfalse;
+        }
+
+        if ((event.type == kevent_timer) && (event.data == HZ_10)) {                                                               
+            if ((am_currently_sampling_temperature == kfalse) && (am_currently_sampling_pressure == kfalse)) {
+                if (have_sampled_temperature_this_second == kfalse) {
+                    bmp180_start_temperature_sampling(&barometer, &twi);         
+                    am_currently_sampling_temperature = ktrue;
+                } else {
+                    bmp180_start_pressure_sampling(&barometer, &twi);
+                    am_currently_sampling_pressure = ktrue;
+                }                                
+            }
         }
 
         if ((event.type == kevent_timer) && (event.data == HZ_200)) {             
-            if (ktrue == bmp180_is_pressure_ready(&barometer, &twi)) {                                
-                if (ksuccess != bmp180_get_pressure_data(&barometer, &timer0, &twi, &measurement)) { die_(2, &assert_log); }
-                uart_log(&uart0, &measurement);
-            }            
+            if (am_currently_sampling_temperature == ktrue) {                
+                if (ktrue == bmp180_is_temperature_ready(&barometer, &twi)) {                                                    
+                    bmp180_get_temperature_data(&barometer, &timer0, &twi, &measurement);                                        
+                    uart_log(&uart0, &measurement);
+                    have_sampled_temperature_this_second = ktrue;                    
+                    am_currently_sampling_temperature = kfalse;
+                }                                    
+            }
+
+            if (am_currently_sampling_pressure == ktrue) {                
+                if (ktrue == bmp180_is_pressure_ready(&barometer, &twi)) {                                                    
+                    bmp180_get_pressure_data(&barometer, &timer0, &twi, &measurement);                                        
+                    uart_log(&uart0, &measurement);
+                    am_currently_sampling_pressure = kfalse;
+                }                                    
+            }
         }
     }
     

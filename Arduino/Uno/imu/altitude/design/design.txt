@@ -10,8 +10,8 @@ timer_driver        (tested in sw)
 event_queue         (tested in sw)
 sample_queue        (tested in sw)
 uart_driver         (tested in sw)
-twi_driver          
-bmp180_driver       
+twi_driver          (tested in hw)
+bmp180_driver       (testing in hw)
 sampler             
 
 Uno Main Flow --
@@ -119,7 +119,8 @@ To Do --
 --------
 # Implement and test incrementally. Commit often. 
 # Test on-device a little at a time, making sure interrupts are being called at each stage.
-    # Timer, Event/Sample Queue, UART drivers all coexist nicely. Onto TWI!
+    # Timer, Event/Sample Queue, UART, TWI drivers all coexist nicely. BMP180 is returning pressure & temperature streams that vary in time.
+    # Now to study what they behave like!
 
 # Try sampling at 200Hz, 25Hz, and 1Hz, and talking to the Barometer/Thermometer. Just raw-dump data on the laptop side.
 # Introduce post-processing on the laptop side
