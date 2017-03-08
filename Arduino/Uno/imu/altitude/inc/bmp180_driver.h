@@ -35,6 +35,7 @@
 
 typedef struct sBMP180Driver {
     uint8_t twi_address;
+    eStatus is_sampling; 
     int8_t remaining_200Hz_ticks_till_pressure_is_ready;
     int8_t remaining_200Hz_ticks_till_temperature_is_ready;
 } sBMP180Driver;
@@ -68,14 +69,14 @@ eStatus bmp180_start_pressure_sampling(sBMP180Driver* restrict barometer,
                                         sTWIDriver* restrict twi);
 
 // @details
-// Checks timer to see whether pressure data should be ready, and checks TWI if it is time.
+// If called at 200Hz, decrements internal counter of ticks-till-sample-is-ready
+// and, when this reaches zero, checks whether pressure data is ready. 
 // @param [in] barometer a bmp180 driver object
-// @param [in] timer a timer driver object
 // @param [in] twi a twi driver object
-// @return #kerror: unsuccessful
-// @return #ksuccess: otherwise
-eStatus bmp180_is_pressure_ready(sBMP180Driver* restrict barometer, 
-                                sTimerDriver* restrict timer, 
+// @return #kfalse: no
+// @return #kerror: twi error
+// @return #ktrue: yes
+eStatus bmp180_is_pressure_ready(sBMP180Driver* restrict barometer,                                 
                                 sTWIDriver* restrict twi);
 
 // @details
@@ -93,6 +94,8 @@ eStatus bmp180_get_pressure_data(sBMP180Driver* restrict barometer,
 
 // @details
 // Starts temperature sampling via a TWI transmission and resets temperature sampling time counter
+// It is expected that the caller polls bmp180_is_temperature_ready at 200Hz following
+// this call.
 // @param [in] barometer a bmp180 driver object
 // @param [in] twi a twi driver object
 // @return #kerror: unsuccessful
@@ -101,14 +104,14 @@ eStatus bmp180_start_temperature_sampling(sBMP180Driver* restrict barometer,
                                         sTWIDriver* restrict twi);
 
 // @details
-// Checks timer to see whether temperature data should be ready, and if it should be, checks TWI
+// If called at 200Hz, decrements internal counter of ticks-till-sample-is-ready
+// and, when this reaches zero, checks whether temperature data is ready. 
 // @param [in] barometer a bmp180 driver object
-// @param [in] timer a timer driver object
 // @param [in] twi a twi driver object
-// @return #kerror: unsuccessful
-// @return #ksuccess: otherwise
-eStatus bmp180_is_temperature_ready(sBMP180Driver* restrict barometer, 
-                                    sTimerDriver* restrict timer, 
+// @return #kfalse: no
+// @return #kerror: twi error
+// @return #ktrue: yes
+eStatus bmp180_is_temperature_ready(sBMP180Driver* restrict barometer,                                     
                                     sTWIDriver* restrict twi);
 
 // @details

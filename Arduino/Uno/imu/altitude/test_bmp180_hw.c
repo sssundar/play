@@ -43,15 +43,21 @@ void main(void) {
         .max_bytes = 1,
         .type = kdatatype_unset
     };    
-    sData measurement; 
+    sData measurement = {
+        .timestamp = { .count = {0x00, 0x00, 0x00} },
+        .bytes = { 0x00, 0x00, 0x00 },
+        .num_bytes = 0x00,
+        .max_bytes = 0,
+        .type = kdatatype_unset
+    };    
 
     _ENABLE_SLEEP();    
     twi_init(&twi);        
     eventq_init(&inbox);    
     uart_init(&uart0, &inbox);       
     timer_init(&timer0, (sTimerClient *) clients, 2);    
-    bmp180_init(&barometer);    
-
+    bmp180_init(&barometer); 
+    
     while (1) {
         while (ksuccess != eventq_dequeue(&inbox, &event)) {
             _SLEEP();
@@ -65,20 +71,14 @@ void main(void) {
             }            
         }
 
-        if ((event.type == kevent_timer) && (event.data == HZ_1)) {            
-            bmp180_start_temperature_sampling(&barometer, &twi))
-            bmp180_start_pressure_sampling(&barometer, &twi))
+        if ((event.type == kevent_timer) && (event.data == HZ_1)) {                                                               
+            if (ksuccess != bmp180_start_pressure_sampling(&barometer, &twi)) { die_(1, &assert_log); }
         }
 
-        if ((event.type == kevent_timer) && (event.data == HZ_200)) {            
-            if (ktrue == bmp180_is_temperature_ready(&barometer, &timer0, &twi)) {                
-                bmp180_get_temperature_data(&barometer, &timer0, &twi, &measurement);
+        if ((event.type == kevent_timer) && (event.data == HZ_200)) {             
+            if (ktrue == bmp180_is_pressure_ready(&barometer, &twi)) {                                
+                if (ksuccess != bmp180_get_pressure_data(&barometer, &timer0, &twi, &measurement)) { die_(2, &assert_log); }
                 uart_log(&uart0, &measurement);
-            }
-            
-            if (ktrue == bmp180_is_pressure_ready(&barometer, &timer0, &twi)) {
-                bmp180_get_pressure_data(&barometer, &timer0, &twi, &measurement);
-                uart_log(&uart0, &measurement);                
             }            
         }
     }

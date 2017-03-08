@@ -12,8 +12,12 @@ from time import sleep
 
 # Python Constants
 NUM_BYTES_PER_SAMPLE = 9
+
 NUM_CALIBRATION_COEFFICIENTS = 11
 BASE_COEFFICIENT_ADDRESS = 0xAA
+
+KDATATYPE_BMP180_BAROMETRY = 2
+KDATATYPE_BMP180_THERMOMETRY = 3
 
 def set_up_coefficient_dict ():
 	parameter_details = [["AC1", "short"], 
@@ -53,12 +57,33 @@ if __name__ == "__main__":
 		
 		# Grab the calibration coefficients and parse them
 		for x in xrange(NUM_CALIBRATION_COEFFICIENTS):
-			data = [struct.unpack('B',x)[0] for x in uno.read(size=NUM_BYTES_PER_SAMPLE)]			
+			data = [struct.unpack('B',x)[0] for x in uno.read(size=NUM_BYTES_PER_SAMPLE)]						
 			(name, sign_and_type) = parameter_address_to_name_and_type[data[5]]			
 			parameters[name] = sign_u16_parameter(data[3] * 256 + data[4], sign_and_type == "short")		
+		
+		for k in sorted(parameters.keys()):
+			print (k, parameters[k])
 
-		# Parse the incoming, endless stream of temperature and pressure data
-		# while True:
-			# Can I have a variable timeout here for the following reads?
+		# Parse the incoming, endless stream of temperature data		
+		while True:
+			sleep(1);
+			data = [struct.unpack('B',x)[0] for x in uno.read(size=NUM_BYTES_PER_SAMPLE)]									
+			timestamp = float(data[0] * 256 * 256 + data[1] * 256 + data[2]) * (1.0/200) # seconds
+			if (data[8] == KDATATYPE_BMP180_THERMOMETRY):
+				UT = float(data[3] * 256 + data[4])
+				X1 = ((UT-parameters["AC6"]) * parameters["AC5"]) / (2**15)
+				X2 = (parameters["MC"] * 2**11) / (X1 + parameters["MD"])
+				B5 = X1 + X2 
+				temperature_c = ((B5+8)/16)/10 # temperature in celcius
+				print (timestamp, temperature_c)
+			elif (data[8] == KDATATYPE_BMP180_BAROMETRY):
+				print data
+			else:
+				print
+				print "###############"
+				print "Received data that was not thermometry or barometry:"
+				print data
+				print "###############"
+				print						
 
 		sys.exit(0)			
